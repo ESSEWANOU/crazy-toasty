@@ -1,1 +1,0 @@
-UPDATE public.menu_items SET description = 'Mini croustille ou 4 nuggets + caprisonne, frites maison + compote' WHERE name = 'Le Kids Combo';

@@ -19,7 +19,7 @@ export function Order() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   return (
-    <section id="commander" className="relative py-20 md:py-32">
+    <section id="adresses" className="relative py-20 md:py-32">
       <div className="container mx-auto px-4">
         <div id="stores" className="glass rounded-3xl p-8 md:p-12">
           <div className="flex items-center gap-3 mb-8">

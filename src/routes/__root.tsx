@@ -1,14 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  Link,
-  createRootRouteWithContext,
-  useRouter,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
-
-import appCss from "../styles.css?url";
+import { Link, Outlet, createRootRoute, useRouter } from "@tanstack/react-router";
 
 function NotFoundComponent() {
   return (
@@ -67,79 +57,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Crazy Toasty — Street Food Toulousaine" },
-      {
-        name: "description",
-        content:
-          "Crazy Toasty : street food toulousaine fun et décalée. Crousty rice, sandos, burgers, wings, milkshakes. Click & Collect, livraison ou sur place à Toulouse.",
-      },
-      { name: "author", content: "Crazy Toasty" },
-      { property: "og:title", content: "Crazy Toasty — Street Food Toulousaine" },
-      {
-        property: "og:description",
-        content:
-          "Crazy Toasty : street food toulousaine fun et décalée. Crousty rice, sandos, burgers, wings, milkshakes. Click & Collect, livraison ou sur place à Toulouse.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Crazy Toasty — Street Food Toulousaine" },
-      {
-        name: "twitter:description",
-        content:
-          "Crazy Toasty : street food toulousaine fun et décalée. Crousty rice, sandos, burgers, wings, milkshakes. Click & Collect, livraison ou sur place à Toulouse.",
-      },
-      {
-        property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b4f19fa7-a55f-4efb-b6c1-bdb2d5e448b5/id-preview-b2da45bf--3f92ada6-5541-4997-a3c4-e435861adc36.lovable.app-1778710591263.png",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b4f19fa7-a55f-4efb-b6c1-bdb2d5e448b5/id-preview-b2da45bf--3f92ada6-5541-4997-a3c4-e435861adc36.lovable.app-1778710591263.png",
-      },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Poppins:wght@400;500;600;700;800;900&display=swap",
-      },
-    ],
-  }),
-  shellComponent: RootShell,
+export const Route = createRootRoute({
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="fr">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Outlet />
-    </QueryClientProvider>
-  );
+  return <Outlet />;
 }
