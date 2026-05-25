@@ -49,7 +49,7 @@ export function StoresMap({ stores, activeIndex, onSelect }: Props) {
       style={{ background: "#1a1208" }}
     >
       <TileLayer
-        attribution='&copy; OpenStreetMap'
+        attribution="&copy; OpenStreetMap"
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       {stores.map((s, i) => (

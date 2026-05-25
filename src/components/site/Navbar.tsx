@@ -3,12 +3,10 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "@/assets/logo.png";
 
-
 const links = [
   { href: "#concept", label: "Concept" },
   { href: "#histoire", label: "Histoire" },
   { href: "#menu", label: "Menu" },
-  { href: "#franchise", label: "Franchise" },
 ];
 
 export function Navbar() {
@@ -52,7 +50,10 @@ export function Navbar() {
           </button>
 
           {/* Center: logo */}
-          <a href="#hero" className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-0 outline-none">
+          <a
+            href="#hero"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-0 outline-none"
+          >
             <img
               src={logo}
               alt="Crazy Toasty Toulouse"
@@ -60,7 +61,7 @@ export function Navbar() {
             />
           </a>
 
-          {/* Right: nav + CTA */}
+          {/* Right: nav */}
           <div className="hidden md:flex items-center gap-1">
             {links.slice(2).map((l) => (
               <a
@@ -71,12 +72,6 @@ export function Navbar() {
                 {l.label}
               </a>
             ))}
-            <a
-              href="/commander"
-              className="ml-2 inline-flex items-center justify-center rounded-full bg-gradient-sunset px-5 py-2.5 text-sm font-bold text-white hover:scale-105 transition-transform shadow-sunset"
-            >
-              Commander
-            </a>
           </div>
 
           {/* Mobile right spacer */}
@@ -90,13 +85,15 @@ export function Navbar() {
             className="md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-2"
           >
             {links.map((l) => (
-              <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="px-4 py-3 rounded-lg hover:bg-white/5">
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="px-4 py-3 rounded-lg hover:bg-white/5"
+              >
                 {l.label}
               </a>
             ))}
-            <a href="/commander" onClick={() => setOpen(false)} className="text-center rounded-full bg-primary px-5 py-3 font-bold text-primary-foreground mt-2">
-              Commander en ligne
-            </a>
           </motion.div>
         )}
       </div>

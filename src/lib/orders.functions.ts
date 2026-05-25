@@ -30,9 +30,12 @@ export const createOrder = createServerFn({ method: "POST" })
       .eq("id", data.restaurant_id)
       .maybeSingle();
     if (rErr || !restaurant || !restaurant.active) throw new Error("Restaurant indisponible");
-    if (data.order_type === "delivery" && !restaurant.accepts_delivery) throw new Error("Livraison non disponible");
-    if (data.order_type === "pickup" && !restaurant.accepts_pickup) throw new Error("Click & Collect non disponible");
-    if (data.order_type === "delivery" && !data.delivery_address) throw new Error("Adresse de livraison requise");
+    if (data.order_type === "delivery" && !restaurant.accepts_delivery)
+      throw new Error("Livraison non disponible");
+    if (data.order_type === "pickup" && !restaurant.accepts_pickup)
+      throw new Error("Click & Collect non disponible");
+    if (data.order_type === "delivery" && !data.delivery_address)
+      throw new Error("Adresse de livraison requise");
 
     // Load menu items to compute server-trusted prices
     const ids = data.items.map((i) => i.menu_item_id);
@@ -44,12 +47,19 @@ export const createOrder = createServerFn({ method: "POST" })
 
     const itemMap = new Map(menuItems.map((m) => [m.id, m]));
     let subtotal = 0;
-    const orderItemsToInsert: { name: string; unit_price_cents: number; quantity: number; menu_item_id: string; options?: string }[] = [];
+    const orderItemsToInsert: {
+      name: string;
+      unit_price_cents: number;
+      quantity: number;
+      menu_item_id: string;
+      options?: string;
+    }[] = [];
     for (const it of data.items) {
       const m = itemMap.get(it.menu_item_id);
       if (!m) throw new Error("Plat introuvable");
       if (!m.available) throw new Error(`"${m.name}" n'est plus disponible`);
-      if (m.restaurant_id && m.restaurant_id !== data.restaurant_id) throw new Error("Plat invalide pour ce restaurant");
+      if (m.restaurant_id && m.restaurant_id !== data.restaurant_id)
+        throw new Error("Plat invalide pour ce restaurant");
       subtotal += m.price_cents * it.quantity;
       orderItemsToInsert.push({
         menu_item_id: m.id,
@@ -101,13 +111,4 @@ export const createOrder = createServerFn({ method: "POST" })
       order_number: order.order_number,
       access_token: order.access_token,
     };
-  });
-
-export const getOrderByToken = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown) => z.object({ token: z.string().uuid() }).parse(input))
-  .handler(async ({ data }) => {
-    const { data: order } = await supabaseAdmin.rpc("get_order_by_token", { _token: data.token });
-    if (!order || order.length === 0) throw new Error("Commande introuvable");
-    const { data: items } = await supabaseAdmin.rpc("get_order_items_by_token", { _token: data.token });
-    return { order: order[0], items: items ?? [] };
   });
