@@ -35,10 +35,11 @@ interface Props {
 
 export function StoresMap({ stores, activeIndex, onSelect }: Props) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return <div className="absolute inset-0 bg-background/40" />;
-
   const { t } = useI18n();
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return <div className="absolute inset-0 bg-background/40" />;
 
   const center: [number, number] = [stores[activeIndex].lat, stores[activeIndex].lng];
 

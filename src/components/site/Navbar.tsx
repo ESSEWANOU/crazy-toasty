@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 import { useI18n } from "@/lib/i18n";
 
 export function Navbar() {
@@ -67,6 +67,9 @@ export function Navbar() {
             <img
               src={logo}
               alt="Crazy Toasty Toulouse"
+              width={420}
+              height={375}
+              decoding="async"
               className={`w-auto border-0 outline-none transition-all duration-500 ${
                 scrolled ? "h-[5.25rem] md:h-[7.5rem]" : "h-[7.5rem] md:h-[11.25rem]"
               }`}

@@ -29,6 +29,7 @@ RLS strict : clients ne voient que leurs commandes (via email/session), staff re
 ## 4. Portail Client (`/commander`)
 
 Parcours :
+
 1. Choix du restaurant (si plusieurs) + type : **Livraison** ou **Click & Collect**
 2. Si livraison → saisie adresse + vérification zone
 3. Menu du resto avec **panier flottant** (ajout/retrait/quantité)

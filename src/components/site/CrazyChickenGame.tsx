@@ -13,6 +13,7 @@ const BASE_SPEED = 240;
 const BASE_GAP = 182;
 const OBSTACLE_WIDTH = 74;
 const METERS_PER_PIXEL = 0.055;
+const MAX_DEVICE_PIXEL_RATIO = 1.5;
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 type GameStatus = "ready" | "running" | "over";
@@ -230,7 +231,7 @@ function drawObstacleBar(
   // simple fallback when obstacle is too short
   if (h < 56) {
     ctx.fillStyle = "rgba(120,125,130,0.98)";
-    (ctx as CanvasRenderingContext2D & { roundRect: Function }).roundRect(x + 4, y + 4, w - 8, h - 8, 8);
+    ctx.roundRect(x + 4, y + 4, w - 8, h - 8, 8);
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.22)";
     ctx.lineWidth = 1.2;
@@ -259,7 +260,7 @@ function drawObstacleBar(
     // handle (near top)
     const handleX = cx - handleW / 2;
     const handleY = y + 8;
-    (ctx as CanvasRenderingContext2D & { roundRect: Function }).roundRect(handleX, handleY, handleW, handleH, 8);
+    ctx.roundRect(handleX, handleY, handleW, handleH, 8);
     ctx.fillStyle = "rgba(45,38,34,0.95)";
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -302,7 +303,7 @@ function drawObstacleBar(
     // bottom obstacle: handle near bottom, blade pointing up
     const handleX = cx - handleW / 2;
     const handleY = y + h - handleH - 8;
-    (ctx as CanvasRenderingContext2D & { roundRect: Function }).roundRect(handleX, handleY, handleW, handleH, 8);
+    ctx.roundRect(handleX, handleY, handleW, handleH, 8);
     ctx.fillStyle = "rgba(45,38,34,0.95)";
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -497,12 +498,12 @@ function drawHUD(ctx: CanvasRenderingContext2D, score: number) {
 
   ctx.fillStyle = "rgba(8,6,18,0.65)";
   ctx.beginPath();
-  (ctx as CanvasRenderingContext2D & { roundRect: Function }).roundRect(18, 16, 164, 68, 22);
+  ctx.roundRect(18, 16, 164, 68, 22);
   ctx.fill();
   ctx.strokeStyle = "rgba(255,132,36,0.38)";
   ctx.lineWidth = 1.6;
   ctx.beginPath();
-  (ctx as CanvasRenderingContext2D & { roundRect: Function }).roundRect(18, 16, 164, 68, 22);
+  ctx.roundRect(18, 16, 164, 68, 22);
   ctx.stroke();
 
   ctx.shadowColor = "rgba(255,145,82,0.4)";
@@ -574,7 +575,7 @@ export function CrazyChickenGame() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const ratio = window.devicePixelRatio || 1;
+    const ratio = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO);
     if (canvas.width !== WIDTH * ratio || canvas.height !== HEIGHT * ratio) {
       canvas.width = WIDTH * ratio;
       canvas.height = HEIGHT * ratio;
@@ -629,7 +630,9 @@ export function CrazyChickenGame() {
       setHighScore(meters);
       try {
         localStorage.setItem("crazyChicken_hs", String(meters));
-      } catch {}
+      } catch {
+        // Ignore localStorage errors.
+      }
     }
     setStatus("over");
     setFinalScore(meters);
@@ -665,8 +668,23 @@ export function CrazyChickenGame() {
   }, [startFresh]);
 
   useEffect(() => {
+    if (status === "ready") {
+      paint();
+      return;
+    }
+
+    let cancelled = false;
+
     const tick = (time: number) => {
+      if (cancelled) return;
+
       const world = worldRef.current;
+      if (document.hidden) {
+        world.lastTime = time;
+        frameRef.current = window.requestAnimationFrame(tick);
+        return;
+      }
+
       const dt = world.lastTime ? Math.min((time - world.lastTime) / 1000, 0.032) : 0;
       world.lastTime = time;
       world.time += dt;
@@ -748,14 +766,20 @@ export function CrazyChickenGame() {
       }
 
       paint();
-      frameRef.current = window.requestAnimationFrame(tick);
+
+      if (world.status === "running" || world.particles.length > 0 || world.deathTimer > 0) {
+        frameRef.current = window.requestAnimationFrame(tick);
+      } else {
+        frameRef.current = null;
+      }
     };
 
     frameRef.current = window.requestAnimationFrame(tick);
     return () => {
+      cancelled = true;
       if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
     };
-  }, [finish, paint]);
+  }, [finish, paint, status]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

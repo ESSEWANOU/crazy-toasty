@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import type { StoreLocation } from "./StoresMap";
@@ -16,11 +16,34 @@ const stores: StoreLocation[] = [
 
 export function Order() {
   const [active, setActive] = useState(0);
-  const [mounted, setMounted] = useState(false);
+  const [mapVisible, setMapVisible] = useState(false);
+  const mapWrapperRef = useRef<HTMLDivElement | null>(null);
   const { t } = useI18n();
-  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const element = mapWrapperRef.current;
+    if (!element) return;
+
+    if (!("IntersectionObserver" in window)) {
+      setMapVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setMapVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "220px" },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   return (
-    <section id="adresses" className="relative py-20 md:py-32">
+    <section id="adresses" className="relative py-16 md:py-24 content-auto">
       <div className="container mx-auto px-4">
         <div
           id="stores"
@@ -61,8 +84,11 @@ export function Order() {
                 </div>
               ))}
             </div>
-            <div className="relative h-[320px] w-full min-w-0 max-w-full md:h-auto md:min-h-[360px] rounded-2xl overflow-hidden border border-border isolate">
-              {mounted ? (
+            <div
+              ref={mapWrapperRef}
+              className="relative h-[320px] w-full min-w-0 max-w-full md:h-auto md:min-h-[360px] rounded-2xl overflow-hidden border border-border isolate"
+            >
+              {mapVisible ? (
                 <Suspense fallback={<div className="absolute inset-0 bg-background/40" />}>
                   <StoresMap stores={stores} activeIndex={active} onSelect={setActive} />
                 </Suspense>

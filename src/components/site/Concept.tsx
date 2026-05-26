@@ -1,14 +1,22 @@
 import { motion } from "framer-motion";
-import bg from "@/assets/menu-tenders.png";
+import bg from "@/assets/menu-tenders.webp";
 import { useI18n } from "@/lib/i18n";
 
 export function Concept() {
   const { t } = useI18n();
   return (
-    <section id="concept" className="relative py-32 overflow-hidden">
+    <section id="concept" className="relative overflow-hidden py-16 md:py-24 content-auto">
       {/* BG image w/ overlays */}
       <div className="absolute inset-0 -z-10">
-        <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+        <img
+          src={bg}
+          alt=""
+          width={960}
+          height={960}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover opacity-20"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
       </div>
 

@@ -1,37 +1,36 @@
 import { useState } from "react";
-import { Flame, Crown, Sparkles } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 
 // Local image fallbacks (par nom de plat)
-import bowlOg from "@/assets/bowl-og.jpeg";
-import bowlSpicy from "@/assets/bowl-spicy.jpeg";
-import bowlCordon from "@/assets/royal-cordon.png";
-import bowlUpload from "@/assets/bowl-upload.jpeg";
-import fritesCrazy from "@/assets/frites-crazy.png";
+import bowlOg from "@/assets/bowl-og.webp";
+import bowlSpicy from "@/assets/bowl-spicy.webp";
+import bowlCordon from "@/assets/royal-cordon.webp";
+import bowlUpload from "@/assets/bowl-upload.webp";
+import fritesCrazy from "@/assets/frites-crazy.webp";
 import wingsBbq from "@/assets/wings-bbq.webp";
-import cookieImg from "@/assets/cookie.jpg";
-import brownieImg from "@/assets/brownie.jpg";
-import cheesecakeImg from "@/assets/cheesecake.jpg";
-import glaceImg from "@/assets/glace.png";
-import eauImg from "@/assets/eau.png";
-import sodaImg from "@/assets/soda.jpg";
-import citronnadeImg from "@/assets/citronnade.jpg";
-import theGlaceImg from "@/assets/the-glace.jpg";
-import milkshakeClassic from "@/assets/milkshake-classic.png";
-import milkshakeCaramel from "@/assets/milkshake-caramel.png";
-import tendersImg from "@/assets/tenders.png";
-import fritesMaisonImg from "@/assets/frites-maison.png";
-import kidsComboImg from "@/assets/kids-combo.png";
-import verdeBombImg from "@/assets/verde-bomb.png";
-import fritesCheddarImg from "@/assets/frites-cheddar.png";
-import wingsNatureNew from "@/assets/wings-nature-new.png";
-import onionRingsImg from "@/assets/onion-rings.png";
-import nuggetsCroustiImg from "@/assets/nuggets-new.png";
-import crazyPopImg from "@/assets/crazy-pop.png";
-import burgerClassicMaster from "@/assets/burger-classic-master.png";
-import burgerSpicyDevil from "@/assets/burger-spicy-devil.png";
-import burgerBaconAttack from "@/assets/burger-bacon-attack.png";
+import cookieImg from "@/assets/cookie.webp";
+import brownieImg from "@/assets/brownie.webp";
+import cheesecakeImg from "@/assets/cheesecake.webp";
+import glaceImg from "@/assets/glace.webp";
+import eauImg from "@/assets/eau.webp";
+import sodaImg from "@/assets/soda.webp";
+import citronnadeImg from "@/assets/citronnade.webp";
+import theGlaceImg from "@/assets/the-glace.webp";
+import milkshakeClassic from "@/assets/milkshake-classic.webp";
+import milkshakeCaramel from "@/assets/milkshake-caramel.webp";
+import tendersImg from "@/assets/tenders.webp";
+import fritesMaisonImg from "@/assets/frites-maison.webp";
+import kidsComboImg from "@/assets/kids-combo.webp";
+import verdeBombImg from "@/assets/verde-bomb.webp";
+import fritesCheddarImg from "@/assets/frites-cheddar.webp";
+import wingsNatureNew from "@/assets/wings-nature-new.webp";
+import onionRingsImg from "@/assets/onion-rings.webp";
+import nuggetsCroustiImg from "@/assets/nuggets-new.webp";
+import crazyPopImg from "@/assets/crazy-pop.webp";
+import burgerClassicMaster from "@/assets/burger-classic-master.webp";
+import burgerSpicyDevil from "@/assets/burger-spicy-devil.webp";
+import burgerBaconAttack from "@/assets/burger-bacon-attack.webp";
 import sauceRanch from "@/assets/sauce-ranch.webp";
 import sauceBbq from "@/assets/sauce-bbq.webp";
 import sauceCheddar from "@/assets/sauce-cheddar.webp";
@@ -39,8 +38,8 @@ import sauceCrazyBurger from "@/assets/sauce-crazy-burger.webp";
 import sauceCrazyCroustille from "@/assets/sauce-crazy-croustille.webp";
 import saucesAll from "@/assets/sauces-all.webp";
 import sauceVerde from "@/assets/sauce-verde.webp";
-import sauceKorean from "@/assets/sauce-korean.png";
-import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.png";
+import sauceKorean from "@/assets/sauce-korean.webp";
+import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
 
 const FALLBACK: Record<string, string> = {
   "Crousty Original — Douceur Thaï": bowlOg,
@@ -109,7 +108,6 @@ type Item = {
   description: string | null;
   price_cents: number;
   category: Category;
-  badge: string | null;
   image_url: string | null;
   sort_order: number;
 };
@@ -121,7 +119,6 @@ const MENU_ITEMS: Item[] = [
     description: "Riz parfumé, poulet croustillant, toppings frais et sauce douceur thaï.",
     price_cents: 1190,
     category: "Crousty Rice",
-    badge: "Best-seller",
     image_url: bowlOg,
     sort_order: 1,
   },
@@ -131,7 +128,6 @@ const MENU_ITEMS: Item[] = [
     description: "La version spicy avec sauce coréenne, croustillant et gros caractère.",
     price_cents: 1290,
     category: "Crousty Rice",
-    badge: "Spicy 🔥",
     image_url: bowlSpicy,
     sort_order: 2,
   },
@@ -141,7 +137,6 @@ const MENU_ITEMS: Item[] = [
     description: "Poulet croustillant, cordon bleu royal et sauce signature.",
     price_cents: 1290,
     category: "Crousty Rice",
-    badge: "Signature ⭐",
     image_url: bowlCordon,
     sort_order: 3,
   },
@@ -151,7 +146,6 @@ const MENU_ITEMS: Item[] = [
     description: "Bowl ultra cheesy avec cheddar fondant et croustillant maison.",
     price_cents: 1190,
     category: "Crousty Rice",
-    badge: "Best-seller",
     image_url: bowlUpload,
     sort_order: 4,
   },
@@ -161,7 +155,6 @@ const MENU_ITEMS: Item[] = [
     description: "Burger généreux, poulet croustillant et sauce Crazy Burger.",
     price_cents: 990,
     category: "Tasty Burgers",
-    badge: "Best-seller",
     image_url: burgerClassicMaster,
     sort_order: 10,
   },
@@ -171,7 +164,6 @@ const MENU_ITEMS: Item[] = [
     description: "Le burger qui chauffe avec sauce spicy et poulet croustillant.",
     price_cents: 1090,
     category: "Tasty Burgers",
-    badge: "Spicy 🔥",
     image_url: burgerSpicyDevil,
     sort_order: 11,
   },
@@ -181,7 +173,6 @@ const MENU_ITEMS: Item[] = [
     description: "Bacon, fromage, poulet croustillant et sauce signature.",
     price_cents: 1090,
     category: "Tasty Burgers",
-    badge: "Best-seller",
     image_url: burgerBaconAttack,
     sort_order: 12,
   },
@@ -191,7 +182,6 @@ const MENU_ITEMS: Item[] = [
     description: "Une Caesar street-food, fraîche, généreuse et croustillante.",
     price_cents: 1190,
     category: "Crousty Bowl Salade",
-    badge: "Chef 👨‍🍳",
     image_url: crazyCaesarCrousty,
     sort_order: 20,
   },
@@ -201,7 +191,6 @@ const MENU_ITEMS: Item[] = [
     description: "Frites croustillantes, simples et efficaces.",
     price_cents: 390,
     category: "Sides",
-    badge: null,
     image_url: fritesMaisonImg,
     sort_order: 30,
   },
@@ -211,7 +200,6 @@ const MENU_ITEMS: Item[] = [
     description: "Frites maison avec cheddar fondant façon Crazy.",
     price_cents: 490,
     category: "Sides",
-    badge: "Best-seller",
     image_url: fritesCheddarImg,
     sort_order: 31,
   },
@@ -221,7 +209,6 @@ const MENU_ITEMS: Item[] = [
     description: "Wings croustillantes, nappées de sauce BBQ smoky.",
     price_cents: 690,
     category: "Wings",
-    badge: "Best-seller",
     image_url: wingsBbq,
     sort_order: 40,
   },
@@ -231,7 +218,6 @@ const MENU_ITEMS: Item[] = [
     description: "Wings croustillantes à tremper dans ta sauce préférée.",
     price_cents: 650,
     category: "Wings",
-    badge: null,
     image_url: wingsNatureNew,
     sort_order: 41,
   },
@@ -241,7 +227,6 @@ const MENU_ITEMS: Item[] = [
     description: "Trois tenders dorés, généreux et ultra croustillants.",
     price_cents: 590,
     category: "Sides",
-    badge: null,
     image_url: tendersImg,
     sort_order: 50,
   },
@@ -251,7 +236,6 @@ const MENU_ITEMS: Item[] = [
     description: "Nuggets croustillants, parfaits avec une sauce maison.",
     price_cents: 490,
     category: "Sides",
-    badge: null,
     image_url: nuggetsCroustiImg,
     sort_order: 51,
   },
@@ -261,7 +245,6 @@ const MENU_ITEMS: Item[] = [
     description: "Anneaux d'oignons dorés et bien croustillants.",
     price_cents: 390,
     category: "Sides",
-    badge: null,
     image_url: onionRingsImg,
     sort_order: 52,
   },
@@ -271,7 +254,6 @@ const MENU_ITEMS: Item[] = [
     description: "La formule enfant simple, croustillante et gourmande.",
     price_cents: 790,
     category: "Kids",
-    badge: null,
     image_url: kidsComboImg,
     sort_order: 60,
   },
@@ -281,7 +263,6 @@ const MENU_ITEMS: Item[] = [
     description: "La sauce maison signature pour accompagner tes sides.",
     price_cents: 90,
     category: "Sauces",
-    badge: null,
     image_url: sauceCrazyCroustille,
     sort_order: 70,
   },
@@ -291,7 +272,6 @@ const MENU_ITEMS: Item[] = [
     description: "Onctueuse, gourmande, pensée pour burgers et frites.",
     price_cents: 90,
     category: "Sauces",
-    badge: null,
     image_url: sauceCrazyBurger,
     sort_order: 71,
   },
@@ -301,7 +281,6 @@ const MENU_ITEMS: Item[] = [
     description: "La sauce qui réveille ton plat.",
     price_cents: 90,
     category: "Sauces",
-    badge: "Spicy 🔥",
     image_url: sauceKorean,
     sort_order: 72,
   },
@@ -311,7 +290,6 @@ const MENU_ITEMS: Item[] = [
     description: "Fraîche, acidulée et parfaite avec du croustillant.",
     price_cents: 350,
     category: "Boissons",
-    badge: null,
     image_url: citronnadeImg,
     sort_order: 80,
   },
@@ -321,7 +299,6 @@ const MENU_ITEMS: Item[] = [
     description: "La boisson fraîche et fruitée.",
     price_cents: 290,
     category: "Boissons",
-    badge: null,
     image_url: theGlaceImg,
     sort_order: 81,
   },
@@ -331,7 +308,6 @@ const MENU_ITEMS: Item[] = [
     description: "Milkshake gourmand au caramel beurre salé.",
     price_cents: 490,
     category: "Boissons",
-    badge: null,
     image_url: milkshakeCaramel,
     sort_order: 82,
   },
@@ -341,7 +317,6 @@ const MENU_ITEMS: Item[] = [
     description: "Cookie maison, fondant et croustillant.",
     price_cents: 350,
     category: "Desserts",
-    badge: null,
     image_url: cookieImg,
     sort_order: 90,
   },
@@ -351,7 +326,6 @@ const MENU_ITEMS: Item[] = [
     description: "Brownie chocolat, dense et généreux.",
     price_cents: 390,
     category: "Desserts",
-    badge: null,
     image_url: brownieImg,
     sort_order: 91,
   },
@@ -361,19 +335,10 @@ const MENU_ITEMS: Item[] = [
     description: "Cheesecake gourmand au speculoos.",
     price_cents: 450,
     category: "Desserts",
-    badge: null,
     image_url: cheesecakeImg,
     sort_order: 92,
   },
 ];
-
-const badgeColor: Record<string, string> = {
-  "Spicy 🔥": "bg-destructive text-destructive-foreground",
-  Nouveau: "bg-secondary text-secondary-foreground",
-  "Best-seller": "bg-primary text-primary-foreground",
-  "Signature ⭐": "bg-purple-600 text-white",
-  "Chef 👨‍🍳": "bg-amber-600 text-white",
-};
 
 const categoryRank = new Map<Category, number>(
   CATEGORY_ORDER.map((category, index) => [category, index]),
@@ -409,7 +374,7 @@ export function Menu() {
   const slugKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_");
 
   return (
-    <section id="menu" className="relative py-20 md:py-32 bg-card/30">
+    <section id="menu" className="relative bg-card/30 py-16 md:py-24 content-auto">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="font-display text-sm tracking-[0.4em] text-sunset-pink mb-4">
@@ -421,21 +386,24 @@ export function Menu() {
           <p className="mt-6 text-foreground/70">{t("menu.description")}</p>
         </div>
 
-        <div className="flex flex-wrap gap-2 md:gap-3 mb-12 justify-center">
-          {filterCategories.map((c) => (
-            <button
-              key={c}
-              onClick={() => setActive(c)}
-              aria-pressed={active === c}
-              className={`min-h-10 max-w-[11rem] rounded-full px-3.5 py-2 sm:px-5 sm:py-2.5 md:px-7 md:py-3.5 text-[0.82rem] sm:text-sm md:text-base font-sans font-semibold leading-snug tracking-normal transition-all ${
-                active === c
-                  ? "bg-primary text-primary-foreground shadow-glow"
-                  : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
-              }`}
-            >
-              {t(`menu.categories.${slugKey(c)}`) || c}
-            </button>
-          ))}
+        <div className="mx-auto mb-12 flex max-w-5xl flex-wrap justify-center gap-2 md:gap-3">
+          {filterCategories.map((c) => {
+            const label = t(`menu.categories.${slugKey(c)}`);
+            return (
+              <button
+                key={c}
+                onClick={() => setActive(c)}
+                aria-pressed={active === c}
+                className={`min-h-10 max-w-full rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-normal break-words transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
+                  active === c
+                    ? "bg-primary text-primary-foreground shadow-glow"
+                    : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid sm:grid-cols-2 gap-10">
@@ -451,11 +419,6 @@ export function Menu() {
 function MenuCard({ item }: { item: Item }) {
   const { t } = useI18n();
   const img = item.image_url || FALLBACK[item.name];
-  const lower = `${item.name} ${item.description ?? ""}`.toLowerCase();
-  const isSpicy = /spicy|firestorm|korean|devil|🔥|piment/.test(lower);
-  const isCheesy = /cheddar|cheese|cheesy|fromage|mozza/.test(lower);
-  const isTopSeller = item.badge === "Best-seller" || item.badge === "Signature ⭐";
-
   return (
     <article className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/90 shadow-card transition-colors duration-200 hover:border-primary/35">
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -463,14 +426,16 @@ function MenuCard({ item }: { item: Item }) {
           <img
             src={img}
             alt={item.name}
-            width={900}
-            height={1125}
+            width={960}
+            height={960}
             loading="lazy"
+            decoding="async"
+            sizes="(min-width: 640px) 50vw, 100vw"
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
           <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 text-center px-4">
-                    <div className="font-display text-5xl mb-2">📸</div>
+            <div className="font-display text-5xl mb-2">📸</div>
             <div className="font-display text-sm tracking-[0.3em] text-primary uppercase">
               {t("menu.photoSoon")}
             </div>
@@ -480,36 +445,6 @@ function MenuCard({ item }: { item: Item }) {
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/10" />
-
-        {/* Top-left badges */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
-          {isTopSeller && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-sunset px-3 py-1.5 text-xs font-bold text-white shadow-sunset">
-              <Crown className="h-3.5 w-3.5" /> {t("menu.mostOrdered")}
-            </span>
-          )}
-          {item.badge && !isTopSeller && (
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold ${badgeColor[item.badge] ?? "bg-primary text-primary-foreground"}`}
-            >
-              {item.badge}
-            </span>
-          )}
-        </div>
-
-        {/* Tags overlay bottom */}
-        <div className="absolute left-4 right-4 bottom-4 flex flex-wrap gap-2">
-          {isSpicy && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-destructive-foreground">
-              <Flame className="h-3 w-3" /> {t("menu.spicy")}
-            </span>
-          )}
-          {isCheesy && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-black">
-              <Sparkles className="h-3 w-3" /> {t("menu.ultraCheesy")}
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Text block */}

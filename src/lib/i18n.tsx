@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Lang = "fr" | "en";
@@ -8,17 +9,11 @@ type I18nContextType = {
   t: (key: string) => string;
 };
 
-const translations: Record<Lang, Record<string, any>> = {
+type TranslationNode = string | { [key: string]: TranslationNode };
+
+const translations: Record<Lang, Record<string, TranslationNode>> = {
   fr: {
     nav: { concept: "Concept", menu: "Menu", where: "Où nous trouver" },
-    game: {
-      tag: "CRAZY GAME",
-      title: "Jouer en attendant la commande",
-      modeArcade: "Mode arcade",
-      play: "Jouer",
-      retry: "Refaire",
-      over: "Partie terminée",
-    },
     hero: {
       subtitle: "Le toasté le plus gourmand de la ville.",
       cta: "Voir la carte",
@@ -45,6 +40,7 @@ const translations: Record<Lang, Record<string, any>> = {
       description:
         "Les préférés de l'équipage. Poulet croustillant cuit à la commande, sauces maison, bowls qui défoncent.",
       categories: {
+        tout: "Tous",
         crousty_rice: "Crousty Rice",
         sides: "Accompagnements",
         crousty_bowl_salade: "Bowl & Salades",
@@ -82,14 +78,6 @@ const translations: Record<Lang, Record<string, any>> = {
   },
   en: {
     nav: { concept: "Concept", menu: "Menu", where: "Where to find us" },
-    game: {
-      tag: "CRAZY GAME",
-      title: "Play while you wait for your order",
-      modeArcade: "Arcade mode",
-      play: "Play",
-      retry: "Retry",
-      over: "Game over",
-    },
     hero: {
       subtitle: "The city's most indulgent toasted sandwich.",
       cta: "See the menu",
@@ -115,6 +103,7 @@ const translations: Record<Lang, Record<string, any>> = {
       title: "THE MENU THAT MAKES YOU CRAZY",
       description: "Crew favorites. Crispy chicken cooked to order, house sauces, bowls that slap.",
       categories: {
+        tout: "All",
         crousty_rice: "Crousty Rice",
         sides: "Sides",
         crousty_bowl_salade: "Bowls & Salads",
@@ -167,12 +156,14 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem("lang", lang);
-    } catch {}
+    } catch {
+      // Ignore localStorage errors.
+    }
   }, [lang]);
 
   const t = (key: string) => {
     const parts = key.split(".");
-    let cur: any = translations[lang];
+    let cur: TranslationNode | undefined = translations[lang];
     for (const p of parts) {
       if (cur && typeof cur === "object" && p in cur) cur = cur[p];
       else return key;

@@ -24,47 +24,49 @@ export function Footer() {
       <div className="container mx-auto px-4 pt-16">
         <div className="grid md:grid-cols-3 gap-10 mb-12">
           <div>
-            <div className="font-display mb-3 uppercase tracking-wide">{t("footer.navigation")}</div>
+            <div className="font-display mb-3 uppercase tracking-wide">
+              {t("footer.navigation")}
+            </div>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#concept" className="hover:text-primary transition-colors">
-                    {t("nav.concept")}
+                  {t("nav.concept")}
                 </a>
               </li>
               <li>
                 <a href="#menu" className="hover:text-primary transition-colors">
-                    {t("nav.menu")}
+                  {t("nav.menu")}
                 </a>
               </li>
             </ul>
           </div>
           <div>
-              <div className="font-display mb-3 uppercase tracking-wide">{t("footer.legal")}</div>
+            <div className="font-display mb-3 uppercase tracking-wide">{t("footer.legal")}</div>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                    {t("footer.legal_notice")}
+                  {t("footer.legal_notice")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                    {t("footer.terms")}
+                  {t("footer.terms")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                    {t("footer.privacy")}
+                  {t("footer.privacy")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                    {t("footer.cookies")}
+                  {t("footer.cookies")}
                 </a>
               </li>
             </ul>
           </div>
           <div>
-              <div className="font-display mb-3 uppercase tracking-wide">{t("footer.followUs")}</div>
+            <div className="font-display mb-3 uppercase tracking-wide">{t("footer.followUs")}</div>
             <div className="flex gap-2">
               <a
                 href="#"

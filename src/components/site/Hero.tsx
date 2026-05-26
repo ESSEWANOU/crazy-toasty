@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import bowlOg from "@/assets/bowl-og.jpeg";
-import burgerClassicMaster from "@/assets/burger-classic-master.png";
-import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.png";
-import story1 from "@/assets/story-1.png";
+import bowlOg from "@/assets/bowl-og.webp";
+import burgerClassicMaster from "@/assets/burger-classic-master.webp";
+import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
+import story1 from "@/assets/story-1.webp";
 
 const heroImages = [story1, burgerClassicMaster, bowlOg, crazyCaesarCrousty];
 
@@ -31,6 +31,11 @@ export function Hero() {
         <img
           src={heroImages[activeImageIndex]}
           alt=""
+          width={960}
+          height={960}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           className="absolute w-full h-full object-cover object-[50%_30%] rounded-3xl"
         />
 
@@ -39,6 +44,10 @@ export function Hero() {
             key={heroImages[incomingImageIndex]}
             src={heroImages[incomingImageIndex]}
             alt=""
+            width={960}
+            height={960}
+            loading="lazy"
+            decoding="async"
             initial={{ opacity: 0, scale: 1.04 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
@@ -95,7 +104,8 @@ export function Hero() {
           className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-foreground/70"
         >
           <span className="inline-flex items-center gap-1.5">
-            <MapPin className="h-4 w-4 text-primary" />{t("hero.address")}
+            <MapPin className="h-4 w-4 text-primary" />
+            {t("hero.address")}
           </span>
         </motion.div>
       </div>
