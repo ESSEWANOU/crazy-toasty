@@ -55,7 +55,11 @@ type Item = {
   id: string;
   name: string;
   description: string | null;
-  price: string;
+  price?: string;
+  prices?: {
+    label: string;
+    value: string;
+  }[];
   category: Category;
   imageUrl: string | null;
   sortOrder: number;
@@ -74,7 +78,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "korean-fusion",
-    name: "Korean Fusion ⭐",
+    name: "Korean Fusion  ",
     description: "Sauce signature Mayo Chili Thaï-Samouraï, crémeuse et savoureuse sans piquer.",
     price: "9,90 €",
     category: "Riz Crousty",
@@ -92,7 +96,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "verde-bomb",
-    name: "Verde Bomb — Sauce du Chef ⭐",
+    name: "Verde Bomb — Sauce du Chef  ",
     description: "African Verde, création signature exclusive du chef.",
     price: "10,90 €",
     category: "Riz Crousty",
@@ -101,7 +105,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "royal-cordon-bleu",
-    name: "Royal Cordon Bleu ⭐",
+    name: "Royal Cordon Bleu  ",
     description: "Cordon bleu maison ultra fondant, poulet, jambon, fromage et sauce au choix.",
     price: "11,90 €",
     category: "Riz Crousty",
@@ -111,7 +115,7 @@ const MENU_ITEMS: Item[] = [
 
   {
     id: "crazy-caesar-crousty",
-    name: "Crazy Caesar Crousty ⭐",
+    name: "Crazy Caesar Crousty  ",
     description:
       "Salade fraîche, tomate, tomates cerises, concombre, oignons rouges, croûtons, poulet croustillant, parmesan et sauce Caesar maison.",
     price: "10,90 €",
@@ -142,19 +146,27 @@ const MENU_ITEMS: Item[] = [
   },
 
   {
-    id: "wings-nature-classic",
-    name: "Wings Nature Classic",
-    description: "Ailes croustillantes dorées, sauce au choix à part.",
-    price: "×6 7,90 € · ×10 11,90 € · Bucket ×16 17,90 €",
-    category: "Wings",
-    imageUrl: wingsNatureNew,
-    sortOrder: 30,
-  },
+  id: "wings-nature-classic",
+  name: "Wings Nature Classic",
+  description: "Ailes croustillantes dorées, sauce au choix à part.",
+  prices: [
+    { label: "×6", value: " 7,90 €" },
+    { label: "×10", value: " 11,90 €" },
+    { label: "×16", value: " 17,90 €" },
+  ],
+  category: "Wings",
+  imageUrl: wingsNatureNew,
+  sortOrder: 30,
+},
   {
     id: "wings-firestorm",
     name: "Wings Firestorm 🔥",
     description: "Ailes croustillantes nappées de sauce piquante maison.",
-    price: "×6 8,50 € · ×10 12,90 € · Bucket ×16 18,90 €",
+    prices: [
+      { label: "×6", value: " 8,50 €" },
+      { label: "×10", value: " 12,90 €" },
+      { label: "×16", value: " 18,90 €" },
+    ],
     category: "Wings",
     imageUrl: wingsBbq,
     sortOrder: 31,
@@ -163,7 +175,11 @@ const MENU_ITEMS: Item[] = [
     id: "wings-smoky-bbq",
     name: "Wings Smoky BBQ",
     description: "Ailes croustillantes glacées à la sauce BBQ fumée maison.",
-    price: "×6 8,50 € · ×10 12,90 € · Bucket ×16 18,90 €",
+    prices: [
+      { label: "×6", value: " 8,50 €" },
+      { label: "×10", value: " 12,90 €" },
+      { label: "×16", value: " 18,90 €" },
+    ],
     category: "Wings",
     imageUrl: wingsBbq,
     sortOrder: 32,
@@ -189,7 +205,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "frites-crazy-style",
-    name: "Frites Crazy Style ⭐",
+    name: "Frites Crazy Style  ",
     description:
       "Frites épaisses, poulet croustillant effiloché, sauce Korean crémeuse et oignons frits.",
     price: "7,90 €",
@@ -217,7 +233,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "pickin-chicken",
-    name: "Pickin' Chicken ×6 ⭐",
+    name: "Pickin' Chicken ×6  ",
     description:
       "6 morceaux de poulet à la chapelure ultra croustillante, 1 sauce au choix offerte.",
     price: "6,90 €",
@@ -256,7 +272,7 @@ const MENU_ITEMS: Item[] = [
 
   {
     id: "sauce-croustille-maison",
-    name: "Sauce Croustille Maison ⭐",
+    name: "Sauce Croustille Maison  ",
     description: "La signature de la maison.",
     price: "0,80 €",
     category: "Sauces",
@@ -347,7 +363,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "speculoos-dream",
-    name: "Speculoos Dream ⭐",
+    name: "Speculoos Dream  ",
     description: "Milkshake crémeux au biscuit speculoos.",
     price: "5,80 €",
     category: "Boissons",
@@ -356,7 +372,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "caramel-beurre-sale",
-    name: "Caramel Beurre Salé ⭐",
+    name: "Caramel Beurre Salé  ",
     description: "Milkshake au caramel beurre salé maison.",
     price: "5,80 €",
     category: "Boissons",
@@ -402,7 +418,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "speculoos-cheesecake",
-    name: "Speculoos Cheesecake ⭐",
+    name: "Speculoos Cheesecake  ",
     description: "Cheesecake maison crémeux sur lit de biscuit speculoos croustillant.",
     price: "4,50 €",
     category: "Desserts",
@@ -440,7 +456,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "box-b-crazy-master",
-    name: "Box B · Crazy Master ⭐",
+    name: "Box B · Crazy Master",
     description:
       "1 Croustille au choix, 3 Wings, 2 Tenders Croustillants, 1 Boisson 33cl et 2 Sauces offertes.",
     price: "16,90 €",
@@ -450,7 +466,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "box-c-crazy-duo",
-    name: "Box C · Crazy Duo ⭐",
+    name: "Box C · Crazy Duo",
     description:
       "2 Croustilles au choix, 6 Wings, 3 Onion Rings, 2 Boissons 33cl et 2 Sauces offertes.",
     price: "29,90 €",
@@ -561,9 +577,23 @@ function MenuCard({ item }: { item: Item }) {
       <div className="relative p-6">
         <h3 className="mb-3 font-display text-xl md:text-2xl">{item.name}</h3>
 
-        <div className="mb-4 inline-flex max-w-full rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300">
-          {item.price}
-        </div>
+      <div className="mb-4 flex flex-wrap gap-2">
+  {item.prices ? (
+    item.prices.map((price) => (
+      <div
+        key={price.label}
+        className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300"
+      >
+        <span className="mr-1 text-emerald-200">{price.label}</span>
+        {price.value}
+      </div>
+    ))
+  ) : (
+    <div className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300">
+      {item.price}
+    </div>
+  )}
+</div>
 
         {item.description && (
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
