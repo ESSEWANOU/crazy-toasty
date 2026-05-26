@@ -30,11 +30,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-mustard: var(--mustard);
-  --color-tomato: var(--tomato);
-  --color-flame: var(--flame);
   --font-display: "Bebas Neue", "Anton", "Arial Black", sans-serif;
-  --font-impact: "Anton", "Bebas Neue", "Arial Black", sans-serif;
   --font-sans: "Poppins", system-ui, sans-serif;
 }
 
@@ -62,18 +58,12 @@
   --input: oklch(0.26 0.06 270);
   --ring: oklch(0.72 0.2 48);
 
-  --mustard: oklch(0.78 0.16 70);
-  --tomato: oklch(0.65 0.2 35);
-  --flame: oklch(0.72 0.2 48);
-  --navy: oklch(0.16 0.06 270);
-
   --gradient-flame: linear-gradient(
     135deg,
     oklch(0.65 0.2 35),
     oklch(0.72 0.2 48),
     oklch(0.8 0.17 65)
   );
-  --gradient-dark: radial-gradient(ellipse at top, oklch(0.26 0.08 270), oklch(0.12 0.05 270));
   /* Sunset Blaze */
   --sunset-orange: oklch(0.74 0.2 45);
   --sunset-pink: oklch(0.66 0.26 0);
@@ -85,7 +75,6 @@
     var(--sunset-violet)
   );
   --shadow-glow: 0 0 80px -10px oklch(0.72 0.2 48 / 0.75);
-  --shadow-sunset: 0 0 90px -10px oklch(0.66 0.26 0 / 0.6);
   --shadow-card: 0 30px 60px -20px oklch(0 0 0 / 0.7);
 }
 
@@ -120,11 +109,6 @@
   h1 {
     letter-spacing: -0.01em;
   }
-  .font-impact {
-    font-family: var(--font-impact);
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
-  }
 }
 
 @layer utilities {
@@ -134,26 +118,14 @@
     background-clip: text;
     color: transparent;
   }
-  .bg-gradient-flame {
-    background: var(--gradient-flame);
-  }
   .text-gradient-sunset {
     background: var(--gradient-sunset);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
-  .bg-gradient-sunset {
-    background: var(--gradient-sunset);
-  }
-  .shadow-sunset {
-    box-shadow: var(--shadow-sunset);
-  }
   .text-sunset-pink {
     color: var(--sunset-pink);
-  }
-  .text-sunset-violet {
-    color: var(--sunset-violet);
   }
   .glass {
     background: oklch(1 0 0 / 0.05);

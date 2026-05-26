@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
-
-// Local image fallbacks (par nom de plat)
+// Menu product images.
 import bowlOg from "@/assets/bowl-og.webp";
 import bowlSpicy from "@/assets/bowl-spicy.webp";
 import bowlCordon from "@/assets/royal-cordon.webp";
@@ -29,8 +28,6 @@ import nuggetsCroustiImg from "@/assets/nuggets-new.webp";
 import crazyPopImg from "@/assets/crazy-pop.webp";
 import burgerClassicMaster from "@/assets/burger-classic-master.webp";
 import burgerSpicyDevil from "@/assets/burger-spicy-devil.webp";
-import burgerBaconAttack from "@/assets/burger-bacon-attack.webp";
-import sauceRanch from "@/assets/sauce-ranch.webp";
 import sauceBbq from "@/assets/sauce-bbq.webp";
 import sauceCheddar from "@/assets/sauce-cheddar.webp";
 import sauceCrazyBurger from "@/assets/sauce-crazy-burger.webp";
@@ -39,52 +36,6 @@ import saucesAll from "@/assets/sauces-all.webp";
 import sauceVerde from "@/assets/sauce-verde.webp";
 import sauceKorean from "@/assets/sauce-korean.webp";
 import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
-
-const FALLBACK: Record<string, string> = {
-  "Crousty Original — Douceur Thaï": bowlOg,
-  "Korean Fusion": bowlSpicy,
-  "Cheesy King": bowlUpload,
-  "Verde Bomb — Sauce du Chef": verdeBombImg,
-  "Royal Cordon Bleu": bowlCordon,
-  "Crazy Caesar Crousty ⭐": crazyCaesarCrousty,
-  "Classic Master": burgerClassicMaster,
-  "Spicy Devil": burgerSpicyDevil,
-  "Bacon Attack": burgerBaconAttack,
-  "Wings Nature Classic": wingsNatureNew,
-  "Wings Firestorm 🔥": wingsBbq,
-  "Wings Smoky BBQ": wingsBbq,
-  "Frites Maison": fritesMaisonImg,
-  "Frites Cheddar Crazy": fritesCheddarImg,
-  "Frites Crazy Style": fritesCrazy,
-  "Onion Rings ×4": onionRingsImg,
-  "Tenders Croustillants ×3": tendersImg,
-  "Nuggets Crousti ×4": nuggetsCroustiImg,
-  "Crazy Pop ×6": crazyPopImg,
-  "Sauce Crazy Croustille": sauceCrazyCroustille,
-  "Sauce Crazy Burger": sauceCrazyBurger,
-  "Sauce Cheddar": sauceCheddar,
-  "Sauce BBQ Smoky": sauceBbq,
-  "Sauce Ranch": sauceRanch,
-  "Sauce Korean Spicy 🔥": sauceKorean,
-  "Sauce African Verde 🌿": sauceVerde,
-  "Sauce Algérienne": saucesAll,
-  Ketchup: saucesAll,
-  Mayonnaise: saucesAll,
-  "Le Kids Combo": kidsComboImg,
-  "Eau (50cl)": eauImg,
-  "Soda (33cl)": sodaImg,
-  "Citronnade Maison": citronnadeImg,
-  "Thé glacé pêche": theGlaceImg,
-  "Milkshake Classic": milkshakeClassic,
-  "Milkshake Speculoos Dream": milkshakeClassic,
-  "Milkshake Caramel Beurre Salé": milkshakeCaramel,
-  "Cookie Noisette Chocolat Maison": cookieImg,
-  "Brownie Maison": brownieImg,
-  "Speculoos Cheesecake": cheesecakeImg,
-  "Glace 2 Boules": glaceImg,
-};
-
-const ALL_CATEGORY = "Tous" as const;
 
 const CATEGORY_ORDER = [
   "Riz Crousty",
@@ -100,7 +51,6 @@ const CATEGORY_ORDER = [
 ] as const;
 
 type Category = (typeof CATEGORY_ORDER)[number];
-type ActiveCategory = typeof ALL_CATEGORY | Category;
 
 type Item = {
   id: string;
@@ -126,8 +76,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "korean-fusion",
     name: "Korean Fusion ⭐",
-    description:
-      "Sauce signature Mayo Chili Thaï-Samouraï, crémeuse et savoureuse sans piquer.",
+    description: "Sauce signature Mayo Chili Thaï-Samouraï, crémeuse et savoureuse sans piquer.",
     price: "9,90 €",
     category: "Riz Crousty",
     imageUrl: bowlSpicy,
@@ -136,8 +85,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "cheesy-king",
     name: "Cheesy King",
-    description:
-      "Sauce cheddar fondue ultra crémeuse, gourmande à souhait.",
+    description: "Sauce cheddar fondue ultra crémeuse, gourmande à souhait.",
     price: "9,90 €",
     category: "Riz Crousty",
     imageUrl: bowlUpload,
@@ -146,8 +94,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "verde-bomb",
     name: "Verde Bomb — Sauce du Chef ⭐",
-    description:
-      "African Verde, création signature exclusive du chef.",
+    description: "African Verde, création signature exclusive du chef.",
     price: "10,90 €",
     category: "Riz Crousty",
     imageUrl: verdeBombImg,
@@ -156,8 +103,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "royal-cordon-bleu",
     name: "Royal Cordon Bleu ⭐",
-    description:
-      "Cordon bleu maison ultra fondant, poulet, jambon, fromage et sauce au choix.",
+    description: "Cordon bleu maison ultra fondant, poulet, jambon, fromage et sauce au choix.",
     price: "11,90 €",
     category: "Riz Crousty",
     imageUrl: bowlCordon,
@@ -199,8 +145,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "wings-nature-classic",
     name: "Wings Nature Classic",
-    description:
-      "Ailes croustillantes dorées, sauce au choix à part.",
+    description: "Ailes croustillantes dorées, sauce au choix à part.",
     price: "×6 7,90 € · ×10 11,90 € · Bucket ×16 17,90 €",
     category: "Wings",
     imageUrl: wingsNatureNew,
@@ -209,8 +154,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "wings-firestorm",
     name: "Wings Firestorm 🔥",
-    description:
-      "Ailes croustillantes nappées de sauce piquante maison.",
+    description: "Ailes croustillantes nappées de sauce piquante maison.",
     price: "×6 8,50 € · ×10 12,90 € · Bucket ×16 18,90 €",
     category: "Wings",
     imageUrl: wingsBbq,
@@ -219,8 +163,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "wings-smoky-bbq",
     name: "Wings Smoky BBQ",
-    description:
-      "Ailes croustillantes glacées à la sauce BBQ fumée maison.",
+    description: "Ailes croustillantes glacées à la sauce BBQ fumée maison.",
     price: "×6 8,50 € · ×10 12,90 € · Bucket ×16 18,90 €",
     category: "Wings",
     imageUrl: wingsBbq,
@@ -230,8 +173,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "frites-maison",
     name: "Frites Maison",
-    description:
-      "Frites épaisses dorées, croustillantes dehors, fondantes dedans, sel marin.",
+    description: "Frites épaisses dorées, croustillantes dehors, fondantes dedans, sel marin.",
     price: "4,00 €",
     category: "Accompagnements",
     imageUrl: fritesMaisonImg,
@@ -240,8 +182,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "frites-cheddar-crazy",
     name: "Frites Cheddar Crazy",
-    description:
-      "Frites épaisses nappées de cheddar fondu et d'oignons frits croustillants.",
+    description: "Frites épaisses nappées de cheddar fondu et d'oignons frits croustillants.",
     price: "5,50 €",
     category: "Accompagnements",
     imageUrl: fritesCheddarImg,
@@ -260,8 +201,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "onion-rings",
     name: "Onion Rings ×4",
-    description:
-      "4 anneaux d'oignons panés dorés à la panure ultra croustillante.",
+    description: "4 anneaux d'oignons panés dorés à la panure ultra croustillante.",
     price: "3,50 €",
     category: "Accompagnements",
     imageUrl: onionRingsImg,
@@ -270,8 +210,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "tenders-croustillants",
     name: "Tenders Croustillants ×3",
-    description:
-      "3 filets de poulet panés dorés, croustillants dehors et juteux dedans.",
+    description: "3 filets de poulet panés dorés, croustillants dehors et juteux dedans.",
     price: "6,90 €",
     category: "Accompagnements",
     imageUrl: tendersImg,
@@ -290,8 +229,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "nuggets-crousti-6",
     name: "Nuggets Crousti ×6",
-    description:
-      "6 nuggets de poulet dorés et croustillants.",
+    description: "6 nuggets de poulet dorés et croustillants.",
     price: "4,50 €",
     category: "Accompagnements",
     imageUrl: nuggetsCroustiImg,
@@ -300,8 +238,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "nuggets-crousti-10",
     name: "Nuggets Crousti ×10",
-    description:
-      "10 nuggets dorés et croustillants, 1 sauce au choix.",
+    description: "10 nuggets dorés et croustillants, 1 sauce au choix.",
     price: "6,90 €",
     category: "Accompagnements",
     imageUrl: nuggetsCroustiImg,
@@ -311,8 +248,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "kids-combo",
     name: "Menu Crazy Kids",
-    description:
-      "4 Nuggets Crousti ou Mini Crousty Rice, petites frites maison et 1 Capri-Sun.",
+    description: "4 Nuggets Crousti ou Mini Crousty Rice, petites frites maison et 1 Capri-Sun.",
     price: "7,90 €",
     category: "Kids",
     imageUrl: kidsComboImg,
@@ -450,8 +386,7 @@ const MENU_ITEMS: Item[] = [
   {
     id: "cookie-noisette-chocolat",
     name: "Cookie Noisette Chocolat Maison",
-    description:
-      "Cookie XXL maison aux pépites de chocolat et éclats de noisettes torréfiées.",
+    description: "Cookie XXL maison aux pépites de chocolat et éclats de noisettes torréfiées.",
     price: "3,90 €",
     category: "Desserts",
     imageUrl: cookieImg,
@@ -540,23 +475,18 @@ const sortedMenuItems = [...MENU_ITEMS].sort((a, b) => {
   return a.name.localeCompare(b.name);
 });
 
-const filterCategories: ActiveCategory[] = [
-  ALL_CATEGORY,
-  ...CATEGORY_ORDER.filter((category) =>
-    sortedMenuItems.some((item) => item.category === category),
-  ),
-];
+const filterCategories: Category[] = CATEGORY_ORDER.filter((category) =>
+  sortedMenuItems.some((item) => item.category === category),
+);
 
-function getFilteredItems(category: ActiveCategory) {
-  if (category === ALL_CATEGORY) return sortedMenuItems;
+function getFilteredItems(category: Category) {
   return sortedMenuItems.filter((item) => item.category === category);
 }
 
 export function Menu() {
-  const [active, setActive] = useState<ActiveCategory>(ALL_CATEGORY);
+  const [active, setActive] = useState<Category>(filterCategories[0]);
   const { t } = useI18n();
   const filtered = getFilteredItems(active);
-
 
   return (
     <section id="menu" className="relative bg-card/30 py-16 md:py-24 content-auto">
@@ -572,23 +502,21 @@ export function Menu() {
         </div>
 
         <div className="mx-auto mb-12 flex max-w-5xl flex-wrap justify-center gap-2 md:gap-3">
-          {filterCategories.map((c) => {
-  const label = c;
-  return (
-              <button
-                key={c}
-                onClick={() => setActive(c)}
-                aria-pressed={active === c}
-                className={`min-h-10 max-w-full rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-normal break-words transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
-                  active === c
-                    ? "bg-primary text-primary-foreground shadow-glow"
-                    : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
+          {filterCategories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => setActive(category)}
+              aria-pressed={active === category}
+              className={`min-h-10 max-w-full rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-normal break-words transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
+                active === category
+                  ? "bg-primary text-primary-foreground shadow-glow"
+                  : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
         </div>
 
         <div className="grid sm:grid-cols-2 gap-10">
@@ -632,9 +560,7 @@ function MenuCard({ item }: { item: Item }) {
       </div>
 
       <div className="relative p-6">
-        <h3 className="mb-3 font-display text-xl md:text-2xl">
-          {item.name}
-        </h3>
+        <h3 className="mb-3 font-display text-xl md:text-2xl">{item.name}</h3>
 
         <div className="mb-4 inline-flex max-w-full rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300">
           {item.price}
