@@ -8,9 +8,9 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-[82vh] flex items-center justify-center overflow-hidden"
+      className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden"
     >
-      <div className="absolute inset-2 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center">
         <img
           src={story1}
           alt=""
@@ -19,10 +19,10 @@ export function Hero() {
           loading="eager"
           decoding="async"
           fetchPriority="high"
-          className="absolute h-full w-full rounded-3xl object-cover object-[50%_30%]"
+          className="absolute h-full w-full object-cover object-[50%_30%]"
         />
 
-        <div className="absolute inset-0 rounded-3xl bg-black/45" />
+        <div className="absolute inset-0 bg-black/45" />
       </div>
 
       <div className="container relative z-10 mx-auto px-4 pt-28 pb-16 text-center">
