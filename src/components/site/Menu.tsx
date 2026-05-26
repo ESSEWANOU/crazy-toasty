@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { Flame, Crown, Sparkles } from "lucide-react";
 import { formatPrice } from "@/lib/format";
@@ -51,7 +50,7 @@ const FALLBACK: Record<string, string> = {
   "Crazy Caesar Crousty ⭐": crazyCaesarCrousty,
   "Classic Master": burgerClassicMaster,
   "Spicy Devil": burgerSpicyDevil,
-  "Bacon Attack 🥓": burgerBaconAttack,
+  "Bacon Attack": burgerBaconAttack,
   "Wings Nature Classic": wingsNatureNew,
   "Wings Firestorm 🔥": wingsBbq,
   "Wings Smoky BBQ": wingsBbq,
@@ -86,12 +85,29 @@ const FALLBACK: Record<string, string> = {
   "Glace 2 Boules": glaceImg,
 };
 
+const ALL_CATEGORY = "Tout" as const;
+
+const CATEGORY_ORDER = [
+  "Crousty Rice",
+  "Sides",
+  "Crousty Bowl Salade",
+  "Tasty Burgers",
+  "Wings",
+  "Sauces",
+  "Boissons",
+  "Desserts",
+  "Kids",
+] as const;
+
+type Category = (typeof CATEGORY_ORDER)[number];
+type ActiveCategory = typeof ALL_CATEGORY | Category;
+
 type Item = {
   id: string;
   name: string;
   description: string | null;
   price_cents: number;
-  category: string;
+  category: Category;
   badge: string | null;
   image_url: string | null;
   sort_order: number;
@@ -160,7 +176,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "bacon-attack",
-    name: "Bacon Attack 🥓",
+    name: "Bacon Attack",
     description: "Bacon, fromage, poulet croustillant et sauce signature.",
     price_cents: 1090,
     category: "Tasty Burgers",
@@ -358,30 +374,35 @@ const badgeColor: Record<string, string> = {
   "Chef 👨‍🍳": "bg-amber-600 text-white",
 };
 
-const CATEGORY_ORDER = [
-  "Crousty Rice",
-  "Sides",
-  "Crousty Bowl Salade",
-  "Tasty Burgers",
-  "Wings",
-  "Sauces",
-  "Box",
-  "Boissons",
-  "Desserts",
-  "Kids",
+const categoryRank = new Map<Category, number>(
+  CATEGORY_ORDER.map((category, index) => [category, index]),
+);
+
+const sortedMenuItems = [...MENU_ITEMS].sort((a, b) => {
+  const byCategory = categoryRank.get(a.category)! - categoryRank.get(b.category)!;
+  if (byCategory !== 0) return byCategory;
+
+  const bySortOrder = a.sort_order - b.sort_order;
+  if (bySortOrder !== 0) return bySortOrder;
+
+  return a.name.localeCompare(b.name);
+});
+
+const filterCategories: ActiveCategory[] = [
+  ALL_CATEGORY,
+  ...CATEGORY_ORDER.filter((category) =>
+    sortedMenuItems.some((item) => item.category === category),
+  ),
 ];
 
-export function Menu() {
-  const [active, setActive] = useState<string>("Tout");
+function getFilteredItems(category: ActiveCategory) {
+  if (category === ALL_CATEGORY) return sortedMenuItems;
+  return sortedMenuItems.filter((item) => item.category === category);
+}
 
-  const cats = [
-    "Tout",
-    ...CATEGORY_ORDER.filter((c) => MENU_ITEMS.some((i) => i.category === c)),
-    ...Array.from(
-      new Set(MENU_ITEMS.map((i) => i.category).filter((c) => !CATEGORY_ORDER.includes(c))),
-    ),
-  ];
-  const filtered = active === "Tout" ? MENU_ITEMS : MENU_ITEMS.filter((i) => i.category === active);
+export function Menu() {
+  const [active, setActive] = useState<ActiveCategory>(ALL_CATEGORY);
+  const filtered = getFilteredItems(active);
 
   return (
     <section id="menu" className="relative py-20 md:py-32 bg-card/30">
@@ -400,14 +421,15 @@ export function Menu() {
         </div>
 
         <div className="flex flex-wrap gap-2 md:gap-3 mb-12 justify-center">
-          {cats.map((c) => (
+          {filterCategories.map((c) => (
             <button
               key={c}
               onClick={() => setActive(c)}
-              className={`rounded-full px-3.5 py-2 sm:px-5 sm:py-2.5 md:px-7 md:py-3.5 text-xs sm:text-sm md:text-base font-display uppercase tracking-wide transition-all ${
+              aria-pressed={active === c}
+              className={`min-h-10 max-w-[11rem] rounded-full px-3.5 py-2 sm:px-5 sm:py-2.5 md:px-7 md:py-3.5 text-[0.82rem] sm:text-sm md:text-base font-sans font-semibold leading-snug tracking-normal transition-all ${
                 active === c
                   ? "bg-primary text-primary-foreground shadow-glow"
-                  : "glass hover:bg-white/10"
+                  : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
               }`}
             >
               {c}
@@ -415,19 +437,17 @@ export function Menu() {
           ))}
         </div>
 
-        <motion.div layout className="grid sm:grid-cols-2 gap-10">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((item, i) => (
-              <MenuCard key={item.id} item={item} index={i} />
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        <div className="grid sm:grid-cols-2 gap-10">
+          {filtered.map((item) => (
+            <MenuCard key={item.id} item={item} />
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-function MenuCard({ item, index }: { item: Item; index: number }) {
+function MenuCard({ item }: { item: Item }) {
   const img = item.image_url || FALLBACK[item.name];
   const lower = `${item.name} ${item.description ?? ""}`.toLowerCase();
   const isSpicy = /spicy|firestorm|korean|devil|🔥|piment/.test(lower);
@@ -435,16 +455,7 @@ function MenuCard({ item, index }: { item: Item; index: number }) {
   const isTopSeller = item.badge === "Best-seller" || item.badge === "Signature ⭐";
 
   return (
-    <motion.article
-      layout
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.6, delay: Math.min(index * 0.05, 0.4), ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -10 }}
-      className="group relative overflow-hidden rounded-3xl glass border border-white/5 hover:border-primary/40 hover:shadow-[0_25px_60px_-15px_oklch(0.7_0.19_48/0.45)] transition-all duration-500"
-    >
+    <article className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/90 shadow-card transition-colors duration-200 hover:border-primary/35">
       <div className="relative aspect-[4/3] overflow-hidden">
         {img ? (
           <img
@@ -453,7 +464,7 @@ function MenuCard({ item, index }: { item: Item; index: number }) {
             width={900}
             height={1125}
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-125"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
           <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 text-center px-4">
@@ -466,7 +477,7 @@ function MenuCard({ item, index }: { item: Item; index: number }) {
 
         {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent opacity-90" />
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/0 group-hover:to-primary/20 transition-all duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/10" />
 
         {/* Top-left badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
@@ -501,11 +512,11 @@ function MenuCard({ item, index }: { item: Item; index: number }) {
 
       {/* Text block */}
       <div className="relative p-6">
-        <h3 className="mb-2 flex flex-wrap items-baseline gap-2 font-display text-xl md:text-2xl transition-colors group-hover:text-primary">
-          <span className="inline-flex shrink-0 rounded-full border border-primary/20 bg-primary/15 px-3 py-1 text-base leading-none text-primary">
+        <h3 className="mb-2 flex items-start justify-between gap-4 font-display text-xl md:text-2xl">
+          <span className="min-w-0 flex-1">{item.name}</span>
+          <span className="inline-flex shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1 font-sans text-base font-extrabold leading-none text-emerald-300">
             {formatPrice(item.price_cents)}
           </span>
-          <span>{item.name}</span>
         </h3>
         {item.description && (
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
@@ -513,6 +524,6 @@ function MenuCard({ item, index }: { item: Item; index: number }) {
           </p>
         )}
       </div>
-    </motion.article>
+    </article>
   );
 }

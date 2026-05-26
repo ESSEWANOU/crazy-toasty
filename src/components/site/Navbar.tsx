@@ -5,7 +5,6 @@ import logo from "@/assets/logo.png";
 
 const links = [
   { href: "#concept", label: "Concept" },
-  { href: "#histoire", label: "Histoire" },
   { href: "#menu", label: "Menu" },
 ];
 
@@ -33,7 +32,7 @@ export function Navbar() {
         <div className="flex items-center justify-between px-5 py-3 relative">
           {/* Left: nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {links.slice(0, 2).map((l) => (
+            {links.slice(0, 1).map((l) => (
               <a
                 key={l.href}
                 href={l.href}
@@ -44,26 +43,24 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* Mobile menu button (left on mobile) */}
-          <button onClick={() => setOpen(!open)} className="md:hidden p-2" aria-label="Menu">
-            {open ? <X /> : <Menu />}
-          </button>
+          {/* Mobile left spacer */}
+          <div className="md:hidden w-10" />
 
           {/* Center: logo */}
           <a
             href="#hero"
-            className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-0 outline-none"
+            className="absolute left-1/2 -translate-x-1/2 translate-y-[1cm] flex items-center justify-center border-0 outline-none"
           >
             <img
               src={logo}
               alt="Crazy Toasty Toulouse"
-              className="w-auto h-16 md:h-24 border-0 outline-none"
+              className="w-auto h-[7.5rem] md:h-[11.25rem] border-0 outline-none"
             />
           </a>
 
           {/* Right: nav */}
           <div className="hidden md:flex items-center gap-1">
-            {links.slice(2).map((l) => (
+            {links.slice(1).map((l) => (
               <a
                 key={l.href}
                 href={l.href}
@@ -74,8 +71,10 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Mobile right spacer */}
-          <div className="md:hidden w-10" />
+          {/* Mobile menu button */}
+          <button onClick={() => setOpen(!open)} className="md:hidden p-2" aria-label="Menu">
+            {open ? <X /> : <Menu />}
+          </button>
         </div>
 
         {open && (

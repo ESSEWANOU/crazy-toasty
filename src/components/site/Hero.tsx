@@ -1,8 +1,25 @@
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+import bowlOg from "@/assets/bowl-og.jpeg";
+import burgerClassicMaster from "@/assets/burger-classic-master.png";
+import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
 import story1 from "@/assets/story-1.png";
 
+const heroImages = [story1, burgerClassicMaster, bowlOg, crazyCaesarCrousty];
+
 export function Hero() {
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [incomingImageIndex, setIncomingImageIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setIncomingImageIndex((activeImageIndex + 1) % heroImages.length);
+    }, 4200);
+
+    return () => window.clearInterval(interval);
+  }, [activeImageIndex]);
+
   return (
     <section
       id="hero"
@@ -10,13 +27,29 @@ export function Hero() {
     >
       <div className="absolute inset-2 flex items-center justify-center">
         <img
-          src={story1}
+          src={heroImages[activeImageIndex]}
           alt=""
           className="absolute w-full h-full object-cover object-[50%_30%] rounded-3xl"
         />
 
+        {incomingImageIndex !== null && (
+          <motion.img
+            key={heroImages[incomingImageIndex]}
+            src={heroImages[incomingImageIndex]}
+            alt=""
+            initial={{ opacity: 0, scale: 1.04 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
+            onAnimationComplete={() => {
+              setActiveImageIndex(incomingImageIndex);
+              setIncomingImageIndex(null);
+            }}
+            className="absolute w-full h-full object-cover object-[50%_30%] rounded-3xl"
+          />
+        )}
+
         {/* Overlay sombre */}
-        <div className="absolute inset-0 bg-black/60 rounded-3xl" />
+        <div className="absolute inset-0 bg-black/45 rounded-3xl" />
       </div>
 
       {/* Content */}

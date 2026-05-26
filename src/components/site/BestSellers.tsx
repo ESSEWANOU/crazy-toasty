@@ -52,7 +52,7 @@ const ITEMS: Item[] = [
   },
   {
     id: "bacon-attack",
-    name: "Bacon Attack 🥓",
+    name: "Bacon Attack",
     description: "Le burger bien costaud avec bacon et sauce signature.",
     price_cents: 1090,
     image_url: burgerBaconAttack,
@@ -120,15 +120,15 @@ export function BestSellers() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
-                className="snap-start shrink-0 w-[85%] sm:w-[55%] md:w-[42%] lg:w-[32%] group"
+                className="snap-start shrink-0 w-[85%] sm:w-[55%] md:w-[42%] lg:w-[32%]"
               >
-                <div className="relative overflow-hidden rounded-3xl glass border border-white/10 hover:border-primary/50 hover:shadow-[0_25px_60px_-15px_oklch(0.7_0.19_48/0.5)] transition-all duration-500">
+                <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/90 shadow-card transition-colors duration-200 hover:border-primary/35">
                   <div className="relative aspect-[4/5] overflow-hidden">
                     {img ? (
                       <img
                         src={img}
                         alt={item.name}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] group-hover:scale-110"
+                        className="absolute inset-0 h-full w-full object-cover"
                       />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20" />
@@ -139,11 +139,11 @@ export function BestSellers() {
                     </span>
                   </div>
                   <div className="p-6">
-                    <h3 className="mb-3 flex flex-wrap items-baseline gap-2 font-display text-xl md:text-2xl">
-                      <span className="inline-flex shrink-0 rounded-full border border-primary/20 bg-primary/15 px-3 py-1 text-base leading-none text-primary">
+                    <h3 className="mb-3 flex items-start justify-between gap-4 font-display text-xl md:text-2xl">
+                      <span className="min-w-0 flex-1">{item.name}</span>
+                      <span className="inline-flex shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1 font-sans text-base font-extrabold leading-none text-emerald-300">
                         {formatPrice(item.price_cents)}
                       </span>
-                      <span>{item.name}</span>
                     </h3>
                   </div>
                 </div>
