@@ -3,7 +3,7 @@ import { formatPrice } from "@/lib/format";
 import burgerClassicMaster from "@/assets/burger-classic-master.png";
 import bowlOg from "@/assets/bowl-og.jpeg";
 import bowlSpicy from "@/assets/bowl-spicy.jpeg";
-import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
+import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.png";
 import burgerBaconAttack from "@/assets/burger-bacon-attack.png";
 
 type Item = {

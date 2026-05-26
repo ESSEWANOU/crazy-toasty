@@ -3,7 +3,7 @@ import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import bowlOg from "@/assets/bowl-og.jpeg";
 import burgerClassicMaster from "@/assets/burger-classic-master.png";
-import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
+import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.png";
 import story1 from "@/assets/story-1.png";
 
 const heroImages = [story1, burgerClassicMaster, bowlOg, crazyCaesarCrousty];

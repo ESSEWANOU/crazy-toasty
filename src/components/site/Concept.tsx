@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import bg from "@/assets/menu-tenders.jpg";
+import bg from "@/assets/menu-tenders.png";
 
 export function Concept() {
   return (

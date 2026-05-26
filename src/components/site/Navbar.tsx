@@ -2,21 +2,23 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "@/assets/logo.png";
-
-const links = [
-  { href: "#concept", label: "Concept" },
-  { href: "#menu", label: "Menu" },
-];
-
-const mobileLinks = [
-  { href: "#menu", label: "Menu" },
-  { href: "#concept", label: "Concept" },
-  { href: "#adresses", label: "Où nous trouver" },
-];
+import { useI18n } from "@/lib/i18n";
 
 export function Navbar() {
+  const { t, lang, setLang } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const links = [
+    { href: "#concept", label: t("nav.concept") },
+    { href: "#menu", label: t("nav.menu") },
+  ];
+
+  const mobileLinks = [
+    { href: "#menu", label: t("nav.menu") },
+    { href: "#concept", label: t("nav.concept") },
+    { href: "#adresses", label: t("nav.where") },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -82,6 +84,27 @@ export function Navbar() {
                 {l.label}
               </a>
             ))}
+
+            <div className="flex items-center gap-2 ml-3">
+              <button
+                onClick={() => setLang("fr")}
+                className={`px-2 py-1 rounded text-sm ${
+                  lang === "fr" ? "bg-white/10" : "hover:bg-white/5"
+                }`}
+                aria-label="Français"
+              >
+                FR
+              </button>
+              <button
+                onClick={() => setLang("en")}
+                className={`px-2 py-1 rounded text-sm ${
+                  lang === "en" ? "bg-white/10" : "hover:bg-white/5"
+                }`}
+                aria-label="English"
+              >
+                EN
+              </button>
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -106,6 +129,21 @@ export function Navbar() {
                 {l.label}
               </a>
             ))}
+
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => setLang("fr")}
+                className={`px-3 py-2 rounded ${lang === "fr" ? "bg-white/10" : "hover:bg-white/5"}`}
+              >
+                FR
+              </button>
+              <button
+                onClick={() => setLang("en")}
+                className={`px-3 py-2 rounded ${lang === "en" ? "bg-white/10" : "hover:bg-white/5"}`}
+              >
+                EN
+              </button>
+            </div>
           </motion.div>
         )}
       </div>
