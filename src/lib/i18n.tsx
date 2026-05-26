@@ -29,10 +29,10 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       p2: "Pas de surgelé. Pas de bullshit. Juste du vrai, créé ici, à Toulouse.",
     },
     menu: {
-      tag: "CARTE COMPLÈTE",
+      tag: "",
       title: "LE MENU QUI REND FOU",
       description:
-        "Tous les produits de la carte Crazy Toasty : riz crousty, burgers, wings, sides, sauces, boissons, desserts et box.",
+        "",
       photoSoon: "Photo bientôt",
     },
     footer: {
@@ -47,7 +47,7 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       copyright: "© {year} Crazy Toasty · Toulous'hein. Tous droits réservés.",
     },
     order: {
-      title: "Retrouve-nous dans la ville rose 🟣",
+      title: "Retrouve-nous dans la ville rose",
       directions: "Itinéraire",
       directions_label: "🧭 Itinéraire",
     },
@@ -74,7 +74,7 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
     menu: {
       tag: "OUR BEST-SELLERS",
       title: "THE MENU THAT MAKES YOU CRAZY",
-      description: "Crew favorites. Crispy chicken cooked to order, house sauces, bowls that slap.",
+      description: "",
       photoSoon: "Photo coming soon",
     },
     footer: {
@@ -89,7 +89,7 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       copyright: "© {year} Crazy Toasty · Toulous'hein. All rights reserved.",
     },
     order: {
-      title: "Find us in the pink city 🟣",
+      title: "Find us in the pink city",
       directions: "Directions",
       directions_label: "🧭 Directions",
     },
