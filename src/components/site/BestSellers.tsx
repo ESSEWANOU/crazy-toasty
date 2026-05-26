@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { formatPrice } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import burgerClassicMaster from "@/assets/burger-classic-master.png";
 import bowlOg from "@/assets/bowl-og.jpeg";
 import bowlSpicy from "@/assets/bowl-spicy.jpeg";
@@ -59,6 +60,7 @@ const ITEMS: Item[] = [
 ];
 
 export function BestSellers() {
+  const { t } = useI18n();
   return (
     <section className="relative py-20 md:py-28 overflow-hidden">
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-card/30 to-background" />
@@ -67,11 +69,12 @@ export function BestSellers() {
         <div className="mb-10">
           <div>
             <div className="font-display text-sm tracking-[0.4em] text-sunset-pink mb-3">
-              ⭐ BEST-SELLERS
+              {t("bestsellers.tag")}
             </div>
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-display leading-[0.95]">
-              CE QUE LES <span className="text-gradient-sunset">TOULOUSAINS</span>
-              <br /> S'ARRACHENT
+              {t("bestsellers.title_prefix")}
+              <span className="text-gradient-sunset">{t("bestsellers.title_highlight")}</span>
+              <br />{t("bestsellers.title_suffix")}
             </h2>
           </div>
         </div>

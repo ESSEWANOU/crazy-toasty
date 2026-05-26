@@ -1,6 +1,8 @@
 import { Instagram, Facebook } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export function Footer() {
+  const { t } = useI18n();
   return (
     <footer className="relative border-t border-border pb-12 overflow-hidden">
       {/* Wordmark on blue background - top */}
@@ -22,47 +24,47 @@ export function Footer() {
       <div className="container mx-auto px-4 pt-16">
         <div className="grid md:grid-cols-3 gap-10 mb-12">
           <div>
-            <div className="font-display mb-3 uppercase tracking-wide">Navigation</div>
+            <div className="font-display mb-3 uppercase tracking-wide">{t("footer.navigation")}</div>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#concept" className="hover:text-primary transition-colors">
-                  Concept
+                    {t("nav.concept")}
                 </a>
               </li>
               <li>
                 <a href="#menu" className="hover:text-primary transition-colors">
-                  Menu
+                    {t("nav.menu")}
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <div className="font-display mb-3 uppercase tracking-wide">Légal</div>
+              <div className="font-display mb-3 uppercase tracking-wide">{t("footer.legal")}</div>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Mentions légales
+                    {t("footer.legal_notice")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  CGV
+                    {t("footer.terms")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Politique de confidentialité
+                    {t("footer.privacy")}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
-                  Cookies
+                    {t("footer.cookies")}
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <div className="font-display mb-3 uppercase tracking-wide">Suis-nous</div>
+              <div className="font-display mb-3 uppercase tracking-wide">{t("footer.followUs")}</div>
             <div className="flex gap-2">
               <a
                 href="#"
@@ -86,14 +88,14 @@ export function Footer() {
                 TT
               </a>
             </div>
-            <p className="text-sm text-muted-foreground mt-4">2 rue Paul Mériel, 31000 Toulouse</p>
+            <p className="text-sm text-muted-foreground mt-4">{t("footer.address")}</p>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4">
         <div className="pt-6 border-t border-border text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Crazy Toasty · Toulous'hein. Tous droits réservés.
+          {t("footer.copyright").replace("{year}", String(new Date().getFullYear()))}
         </div>
       </div>
     </footer>

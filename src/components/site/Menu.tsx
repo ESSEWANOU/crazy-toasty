@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Flame, Crown, Sparkles } from "lucide-react";
 import { formatPrice } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 // Local image fallbacks (par nom de plat)
 import bowlOg from "@/assets/bowl-og.jpeg";
@@ -402,22 +403,22 @@ function getFilteredItems(category: ActiveCategory) {
 
 export function Menu() {
   const [active, setActive] = useState<ActiveCategory>(ALL_CATEGORY);
+  const { t } = useI18n();
   const filtered = getFilteredItems(active);
+
+  const slugKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_");
 
   return (
     <section id="menu" className="relative py-20 md:py-32 bg-card/30">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="font-display text-sm tracking-[0.4em] text-sunset-pink mb-4">
-            NOS BEST-SELLERS
+            {t("menu.tag")}
           </div>
           <h2 className="text-4xl sm:text-5xl md:text-7xl font-display leading-[0.95]">
-            LE MENU <span className="text-gradient-sunset">QUI REND FOU</span>
+            {t("menu.title")}
           </h2>
-          <p className="mt-6 text-foreground/70">
-            Les préférés de l'équipage. Poulet croustillant cuit à la commande, sauces maison, bowls
-            qui défoncent.
-          </p>
+          <p className="mt-6 text-foreground/70">{t("menu.description")}</p>
         </div>
 
         <div className="flex flex-wrap gap-2 md:gap-3 mb-12 justify-center">
@@ -432,7 +433,7 @@ export function Menu() {
                   : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
               }`}
             >
-              {c}
+              {t(`menu.categories.${slugKey(c)}`) || c}
             </button>
           ))}
         </div>
@@ -448,6 +449,7 @@ export function Menu() {
 }
 
 function MenuCard({ item }: { item: Item }) {
+  const { t } = useI18n();
   const img = item.image_url || FALLBACK[item.name];
   const lower = `${item.name} ${item.description ?? ""}`.toLowerCase();
   const isSpicy = /spicy|firestorm|korean|devil|🔥|piment/.test(lower);
@@ -468,9 +470,9 @@ function MenuCard({ item }: { item: Item }) {
           />
         ) : (
           <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 text-center px-4">
-            <div className="font-display text-5xl mb-2">📸</div>
+                    <div className="font-display text-5xl mb-2">📸</div>
             <div className="font-display text-sm tracking-[0.3em] text-primary uppercase">
-              Photo bientôt
+              {t("menu.photoSoon")}
             </div>
           </div>
         )}
@@ -483,7 +485,7 @@ function MenuCard({ item }: { item: Item }) {
         <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
           {isTopSeller && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-sunset px-3 py-1.5 text-xs font-bold text-white shadow-sunset">
-              <Crown className="h-3.5 w-3.5" /> Le plus commandé
+              <Crown className="h-3.5 w-3.5" /> {t("menu.mostOrdered")}
             </span>
           )}
           {item.badge && !isTopSeller && (
@@ -499,12 +501,12 @@ function MenuCard({ item }: { item: Item }) {
         <div className="absolute left-4 right-4 bottom-4 flex flex-wrap gap-2">
           {isSpicy && (
             <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-destructive-foreground">
-              <Flame className="h-3 w-3" /> Spicy
+              <Flame className="h-3 w-3" /> {t("menu.spicy")}
             </span>
           )}
           {isCheesy && (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-black">
-              <Sparkles className="h-3 w-3" /> Ultra cheesy
+              <Sparkles className="h-3 w-3" /> {t("menu.ultraCheesy")}
             </span>
           )}
         </div>

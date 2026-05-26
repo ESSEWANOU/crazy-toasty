@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import bowlOg from "@/assets/bowl-og.jpeg";
 import burgerClassicMaster from "@/assets/burger-classic-master.png";
 import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.png";
@@ -11,6 +12,7 @@ const heroImages = [story1, burgerClassicMaster, bowlOg, crazyCaesarCrousty];
 export function Hero() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [incomingImageIndex, setIncomingImageIndex] = useState<number | null>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -69,7 +71,7 @@ export function Hero() {
           transition={{ delay: 0.7, duration: 0.9 }}
           className="text-base md:text-xl text-foreground/80 max-w-2xl mx-auto mb-8 md:mb-10 px-2"
         >
-          Le toasté le plus gourmand de la ville.
+          {t("hero.subtitle")}
         </motion.p>
 
         <motion.div
@@ -82,7 +84,7 @@ export function Hero() {
             href="#menu"
             className="inline-flex items-center gap-2 rounded-full border-2 border-foreground/30 backdrop-blur px-6 py-3 md:px-8 md:py-4 font-display text-base md:text-lg uppercase tracking-wide hover:bg-white/10 transition-colors"
           >
-            Voir la carte
+            {t("hero.cta")}
           </a>
         </motion.div>
 
@@ -93,8 +95,7 @@ export function Hero() {
           className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-foreground/70"
         >
           <span className="inline-flex items-center gap-1.5">
-            <MapPin className="h-4 w-4 text-primary" />2 rue Paul Mériel, Toulouse · à 2 min du
-            métro Jean Jaurès
+            <MapPin className="h-4 w-4 text-primary" />{t("hero.address")}
           </span>
         </motion.div>
       </div>

@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import bg from "@/assets/menu-tenders.png";
+import { useI18n } from "@/lib/i18n";
 
 export function Concept() {
+  const { t } = useI18n();
   return (
     <section id="concept" className="relative py-32 overflow-hidden">
       {/* BG image w/ overlays */}
@@ -19,9 +21,9 @@ export function Concept() {
             transition={{ delay: 0.1 }}
             className="text-5xl md:text-7xl font-display mb-8 leading-[0.95]"
           >
-            ON VIENT D'OÙ ?
+            {t("concept.titleLine1")}
             <br />
-            <span className="text-gradient-sunset">DE TOULOUSE, FRÈRE.</span>
+            <span className="text-gradient-sunset">{t("concept.titleHighlight")}</span>
           </motion.h2>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -31,14 +33,11 @@ export function Concept() {
             className="space-y-4 text-lg text-foreground/80"
           >
             <p>
-              Crazy Toasty, c'est avant tout{" "}
-              <span className="text-foreground font-bold">le Croustille Bowl</span> : une base
-              généreuse (riz parfumé ou frites maison), du poulet pané croustillant à mort, des
-              toppings frais et nos sauces signature. Le tout dans un bowl, prêt à dévorer.
+              {t("concept.p1_start")}
+              <span className="text-foreground font-bold">{t("concept.p1_bold")}</span>
+              {t("concept.p1_end")}
             </p>
-            <p className="text-foreground font-bold">
-              Pas de surgelé. Pas de bullshit. Juste du vrai, créé ici, à Toulouse.
-            </p>
+            <p className="text-foreground font-bold">{t("concept.p2")}</p>
           </motion.div>
         </div>
       </div>

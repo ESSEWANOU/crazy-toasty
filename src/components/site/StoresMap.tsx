@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useI18n } from "@/lib/i18n";
 
 export interface StoreLocation {
   city: string;
@@ -36,6 +37,8 @@ export function StoresMap({ stores, activeIndex, onSelect }: Props) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return <div className="absolute inset-0 bg-background/40" />;
+
+  const { t } = useI18n();
 
   const center: [number, number] = [stores[activeIndex].lat, stores[activeIndex].lng];
 
@@ -78,7 +81,7 @@ export function StoresMap({ stores, activeIndex, onSelect }: Props) {
                   textDecoration: "none",
                 }}
               >
-                🧭 Itinéraire
+                {t("order.directions_label")}
               </a>
             </div>
           </Popup>

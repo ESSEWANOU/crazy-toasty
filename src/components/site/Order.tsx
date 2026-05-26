@@ -1,5 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { MapPin, Navigation } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 import type { StoreLocation } from "./StoresMap";
 
 const StoresMap = lazy(() => import("./StoresMap").then((m) => ({ default: m.StoresMap })));
@@ -16,6 +17,7 @@ const stores: StoreLocation[] = [
 export function Order() {
   const [active, setActive] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const { t } = useI18n();
   useEffect(() => setMounted(true), []);
   return (
     <section id="adresses" className="relative py-20 md:py-32">
@@ -26,7 +28,7 @@ export function Order() {
         >
           <div className="flex items-center gap-3 mb-8 min-w-0">
             <MapPin className="h-6 w-6 text-primary" />
-            <h3 className="text-2xl font-display">Retrouve-nous dans la ville rose 🟣</h3>
+            <h3 className="text-2xl font-display">{t("order.title")}</h3>
           </div>
           <div className="grid min-w-0 md:grid-cols-2 gap-6 md:gap-8">
             <div className="min-w-0 space-y-3">
@@ -53,7 +55,7 @@ export function Order() {
                       className="self-start shrink-0 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
                     >
                       <Navigation className="h-3 w-3" />
-                      Itinéraire
+                      {t("order.directions")}
                     </a>
                   </div>
                 </div>
