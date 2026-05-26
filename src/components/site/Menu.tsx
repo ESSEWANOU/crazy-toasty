@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
-// Menu product images.
 import bowlOg from "@/assets/bowl-og.webp";
 import bowlSpicy from "@/assets/bowl-spicy.webp";
 import bowlCordon from "@/assets/royal-cordon.webp";
