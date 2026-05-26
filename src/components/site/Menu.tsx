@@ -36,6 +36,81 @@ import sauceVerde from "@/assets/sauce-verde.webp";
 import sauceKorean from "@/assets/sauce-korean.webp";
 import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
 
+// liste de sauvegarde pour le panier, à stocker dans le localStorage
+type SavedItem = {
+  id: string;
+  name: string;
+  priceLabel: string;
+  priceCents: number;
+  quantity: number;
+};
+
+function priceToCents(price: string) {
+  const match = price.match(/(\d+[,.]\d{2})\s*€/);
+
+  if (!match) {
+    return 0;
+  }
+
+  return Math.round(Number(match[1].replace(",", ".")) * 100);
+}
+
+function formatEuro(cents: number) {
+  return `${(cents / 100).toFixed(2).replace(".", ",")} €`;
+}
+
+function SavedOrderPanel({
+  items,
+  totalCents,
+  onRemoveItem,
+}: {
+  items: SavedItem[];
+  totalCents: number;
+  onRemoveItem: (id: string) => void;
+}) {
+  return (
+    <div className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-card sm:p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="font-sans text-base font-extrabold tracking-normal text-foreground sm:text-lg">
+          Commande
+        </h2>
+        <span className="font-sans text-sm font-bold text-foreground/70">
+          {formatEuro(totalCents)}
+        </span>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Aucun article pour le moment.</p>
+      ) : (
+        <ul className="space-y-3">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/80 p-3"
+            >
+              <div>
+                <p className="font-semibold">{item.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {item.quantity} × {item.priceLabel}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-full border border-border/70 bg-card/80 px-3 py-1 text-sm font-semibold text-sunset-pink transition hover:border-primary/50 hover:text-primary"
+                onClick={() => onRemoveItem(item.id)}
+              >
+                Supprimer
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/////////////////////////////////////////////
+
 const CATEGORY_ORDER = [
   "Riz Crousty",
   "Salades",
@@ -51,15 +126,18 @@ const CATEGORY_ORDER = [
 
 type Category = (typeof CATEGORY_ORDER)[number];
 
+type PriceOption = {
+  id: string;
+  label: string;
+  value: string;
+};
+
 type Item = {
   id: string;
   name: string;
   description: string | null;
   price?: string;
-  prices?: {
-    label: string;
-    value: string;
-  }[];
+  prices?: PriceOption[];
   category: Category;
   imageUrl: string | null;
   sortOrder: number;
@@ -146,26 +224,26 @@ const MENU_ITEMS: Item[] = [
   },
 
   {
-  id: "wings-nature-classic",
-  name: "Wings Nature Classic",
-  description: "Ailes croustillantes dorées, sauce au choix à part.",
-  prices: [
-    { label: "×6", value: " 7,90 €" },
-    { label: "×10", value: " 11,90 €" },
-    { label: "×16", value: " 17,90 €" },
-  ],
-  category: "Wings",
-  imageUrl: wingsNatureNew,
-  sortOrder: 30,
-},
+    id: "wings-nature-classic",
+    name: "Wings Nature Classic",
+    description: "Ailes croustillantes dorées, sauce au choix à part.",
+    prices: [
+      { id: "x6", label: "×6", value: " 7,90 €" },
+      { id: "x10", label: "×10", value: " 11,90 €" },
+      { id: "x16", label: "×16", value: " 17,90 €" },
+    ],
+    category: "Wings",
+    imageUrl: wingsNatureNew,
+    sortOrder: 30,
+  },
   {
     id: "wings-firestorm",
-    name: "Wings Firestorm 🔥",
+    name: "Wings Firestorm ",
     description: "Ailes croustillantes nappées de sauce piquante maison.",
     prices: [
-      { label: "×6", value: " 8,50 €" },
-      { label: "×10", value: " 12,90 €" },
-      { label: "×16", value: " 18,90 €" },
+      { id: "x6", label: "×6", value: " 8,50 €" },
+      { id: "x10", label: "×10", value: " 12,90 €" },
+      { id: "x16", label: "×16", value: " 18,90 €" },
     ],
     category: "Wings",
     imageUrl: wingsBbq,
@@ -176,9 +254,9 @@ const MENU_ITEMS: Item[] = [
     name: "Wings Smoky BBQ",
     description: "Ailes croustillantes glacées à la sauce BBQ fumée maison.",
     prices: [
-      { label: "×6", value: " 8,50 €" },
-      { label: "×10", value: " 12,90 €" },
-      { label: "×16", value: " 18,90 €" },
+      { id: "x6", label: "×6", value: " 8,50 €" },
+      { id: "x10", label: "×10", value: " 12,90 €" },
+      { id: "x16", label: "×16", value: " 18,90 €" },
     ],
     category: "Wings",
     imageUrl: wingsBbq,
@@ -281,7 +359,7 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "sauce-spicy",
-    name: "Sauce Spicy 🔥",
+    name: "Sauce Spicy   ",
     description: "Sauce piquante à base de chili.",
     price: "0,80 €",
     category: "Sauces",
@@ -500,20 +578,70 @@ function getFilteredItems(category: Category) {
 
 export function Menu() {
   const [active, setActive] = useState<Category>(filterCategories[0]);
+  const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const { t } = useI18n();
   const filtered = getFilteredItems(active);
+
+  const totalCents = savedItems.reduce((total, item) => total + item.priceCents * item.quantity, 0);
+
+  function handleSaveItem(item: Item, selectedPrice?: PriceOption) {
+    const priceLabel = selectedPrice
+      ? `${selectedPrice.label} ${selectedPrice.value.trim()}`
+      : (item.price ?? "");
+
+    const priceCents = priceToCents(priceLabel);
+
+    const savedId = selectedPrice ? `${item.id}-${selectedPrice.id}` : item.id;
+
+    setSavedItems((currentItems) => {
+      const existingItem = currentItems.find((savedItem) => savedItem.id === savedId);
+
+      if (existingItem) {
+        return currentItems.map((savedItem) =>
+          savedItem.id === savedId ? { ...savedItem, quantity: savedItem.quantity + 1 } : savedItem,
+        );
+      }
+
+      return [
+        ...currentItems,
+        {
+          id: savedId,
+          name: item.name,
+          priceLabel,
+          priceCents,
+          quantity: 1,
+        },
+      ];
+    });
+  }
+
+  function handleRemoveItem(id: string) {
+    setSavedItems((currentItems) =>
+      currentItems
+        .map((item) => (item.id === id ? { ...item, quantity: item.quantity - 1 } : item))
+        .filter((item) => item.quantity > 0),
+    );
+  }
 
   return (
     <section id="menu" className="relative bg-card/30 py-16 md:py-24 content-auto">
       <div className="container mx-auto px-4">
+        <div className="mx-auto mb-8 max-w-3xl">
+          <SavedOrderPanel
+            items={savedItems}
+            totalCents={totalCents}
+            onRemoveItem={handleRemoveItem}
+          />
+        </div>
+
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="font-display text-sm tracking-[0.4em] text-sunset-pink mb-4">
             {t("menu.tag")}
           </div>
+
           <h2 className="text-4xl sm:text-5xl md:text-7xl font-display leading-[0.95]">
             {t("menu.title")}
           </h2>
-          <p className="mt-6 text-foreground/70">{t("menu.description")}</p>
         </div>
 
         <div className="mx-auto mb-12 flex max-w-5xl flex-wrap justify-center gap-2 md:gap-3">
@@ -536,16 +664,39 @@ export function Menu() {
 
         <div className="grid sm:grid-cols-2 gap-10">
           {filtered.map((item) => (
-            <MenuCard key={item.id} item={item} />
+            <MenuCard key={item.id} item={item} onSave={handleSaveItem} />
           ))}
         </div>
       </div>
     </section>
   );
 }
-function MenuCard({ item }: { item: Item }) {
+function MenuCard({
+  item,
+  onSave,
+}: {
+  item: Item;
+  onSave: (item: Item, selectedPrice?: PriceOption) => void;
+}) {
+  const [priceOptionsOpen, setPriceOptionsOpen] = useState(false);
   const { t } = useI18n();
   const img = item.imageUrl;
+  const priceOptions = item.prices ?? [];
+  const hasPriceOptions = priceOptions.length > 0;
+
+  function handleAddClick() {
+    if (hasPriceOptions) {
+      setPriceOptionsOpen((open) => !open);
+      return;
+    }
+
+    onSave(item);
+  }
+
+  function handlePriceOptionClick(price: PriceOption) {
+    onSave(item, price);
+    setPriceOptionsOpen(false);
+  }
 
   return (
     <article className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/90 shadow-card transition-colors duration-200 hover:border-primary/35">
@@ -575,25 +726,56 @@ function MenuCard({ item }: { item: Item }) {
       </div>
 
       <div className="relative p-6">
-        <h3 className="mb-3 font-display text-xl md:text-2xl">{item.name}</h3>
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <h3 className="font-display text-xl leading-tight md:text-2xl">{item.name}</h3>
 
-      <div className="mb-4 flex flex-wrap gap-2">
-  {item.prices ? (
-    item.prices.map((price) => (
-      <div
-        key={price.label}
-        className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300"
-      >
-        <span className="mr-1 text-emerald-200">{price.label}</span>
-        {price.value}
-      </div>
-    ))
-  ) : (
-    <div className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300">
-      {item.price}
-    </div>
-  )}
-</div>
+          <button
+            type="button"
+            onClick={handleAddClick}
+            aria-expanded={hasPriceOptions ? priceOptionsOpen : undefined}
+            aria-label={
+              hasPriceOptions ? `Choisir le format de ${item.name}` : `Ajouter ${item.name}`
+            }
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-black leading-none text-primary-foreground shadow-glow transition-transform active:scale-95"
+          >
+            +
+          </button>
+        </div>
+        <div className="mb-4">
+          {hasPriceOptions ? (
+            <>
+              <div className="inline-flex rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300">
+                Choisir un format
+              </div>
+
+              {priceOptionsOpen && (
+                <ul className="mt-3 space-y-2 rounded-2xl border border-border/70 bg-background/80 p-3">
+                  {priceOptions.map((price) => (
+                    <li key={price.id}>
+                      <button
+                        type="button"
+                        onClick={() => handlePriceOptionClick(price)}
+                        className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-card"
+                      >
+                        <span className="flex items-center gap-2 font-sans text-sm font-bold text-foreground">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                          {price.label}
+                        </span>
+                        <span className="font-sans text-sm font-extrabold text-emerald-300">
+                          {price.value.trim()}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          ) : (
+            <div className="inline-flex rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300">
+              {item.price}
+            </div>
+          )}
+        </div>
 
         {item.description && (
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">

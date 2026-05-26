@@ -31,8 +31,7 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
     menu: {
       tag: "",
       title: "LE MENU QUI REND FOU",
-      description:
-        "",
+      description: "",
       photoSoon: "Photo bientôt",
     },
     footer: {
