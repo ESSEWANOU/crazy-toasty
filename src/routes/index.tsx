@@ -3,6 +3,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Hero } from "@/components/site/Hero";
 import { Concept } from "@/components/site/Concept";
 import { Menu } from "@/components/site/Menu";
+import { CrazyChickenGame } from "@/components/site/CrazyChickenGame";
 import { BestSellers } from "@/components/site/BestSellers";
 import { Order } from "@/components/site/Order";
 import { Footer } from "@/components/site/Footer";
@@ -20,6 +21,7 @@ function Index() {
       <Hero />
       <BestSellers />
       <Menu />
+      <CrazyChickenGame />
       <Concept />
       <Order />
       <Footer />

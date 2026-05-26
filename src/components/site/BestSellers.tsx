@@ -1,6 +1,4 @@
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import burgerClassicMaster from "@/assets/burger-classic-master.png";
 import bowlOg from "@/assets/bowl-og.jpeg";
@@ -61,24 +59,12 @@ const ITEMS: Item[] = [
 ];
 
 export function BestSellers() {
-  const [index, setIndex] = useState(0);
-  const trackRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const card = track.children[index] as HTMLElement | undefined;
-    if (card) track.scrollTo({ left: card.offsetLeft - 16, behavior: "smooth" });
-  }, [index]);
-
-  const go = (dir: 1 | -1) => setIndex((i) => (i + dir + ITEMS.length) % ITEMS.length);
-
   return (
     <section className="relative py-20 md:py-28 overflow-hidden">
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-card/30 to-background" />
 
       <div className="container mx-auto px-4">
-        <div className="flex items-end justify-between mb-10 gap-4 flex-wrap">
+        <div className="mb-10">
           <div>
             <div className="font-display text-sm tracking-[0.4em] text-sunset-pink mb-3">
               ⭐ BEST-SELLERS
@@ -88,29 +74,9 @@ export function BestSellers() {
               <br /> S'ARRACHENT
             </h2>
           </div>
-          <div className="hidden md:flex gap-2">
-            <button
-              onClick={() => go(-1)}
-              className="h-12 w-12 rounded-full glass border border-white/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all"
-              aria-label="Précédent"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => go(1)}
-              className="h-12 w-12 rounded-full glass border border-white/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all"
-              aria-label="Suivant"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
         </div>
 
-        <div
-          ref={trackRef}
-          className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-6 -mx-4 px-4 scrollbar-hide"
-          style={{ scrollbarWidth: "none" }}
-        >
+        <div className="-mx-4 flex gap-5 overflow-x-auto px-4 pb-6 snap-x snap-mandatory">
           {ITEMS.map((item, i) => {
             const img = item.image_url;
             return (
@@ -120,7 +86,7 @@ export function BestSellers() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
-                className="snap-start shrink-0 w-[85%] sm:w-[55%] md:w-[42%] lg:w-[32%]"
+                className="w-[82vw] max-w-[24rem] shrink-0 snap-start sm:w-[22rem] lg:w-[24rem]"
               >
                 <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/90 shadow-card transition-colors duration-200 hover:border-primary/35">
                   <div className="relative aspect-[4/5] overflow-hidden">
@@ -150,18 +116,6 @@ export function BestSellers() {
               </motion.article>
             );
           })}
-        </div>
-
-        {/* Dots */}
-        <div className="flex justify-center gap-2 mt-6">
-          {ITEMS.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setIndex(i)}
-              aria-label={`Aller au produit ${i + 1}`}
-              className={`h-2 rounded-full transition-all ${i === index ? "w-8 bg-primary" : "w-2 bg-white/20"}`}
-            />
-          ))}
         </div>
       </div>
     </section>

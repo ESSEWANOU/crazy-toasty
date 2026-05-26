@@ -45,8 +45,8 @@ export function StoresMap({ stores, activeIndex, onSelect }: Props) {
       zoom={13}
       key={activeIndex}
       scrollWheelZoom={false}
-      className="absolute inset-0 h-full w-full max-w-full"
-      style={{ background: "#1a1208", overflow: "hidden" }}
+      className="absolute inset-0 h-full w-full max-w-full outline-none"
+      style={{ background: "#1a1208", overflow: "hidden", outline: "none" }}
     >
       <TileLayer
         attribution="&copy; OpenStreetMap"

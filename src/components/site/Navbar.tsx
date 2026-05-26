@@ -8,6 +8,12 @@ const links = [
   { href: "#menu", label: "Menu" },
 ];
 
+const mobileLinks = [
+  { href: "#menu", label: "Menu" },
+  { href: "#concept", label: "Concept" },
+  { href: "#adresses", label: "Où nous trouver" },
+];
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -47,16 +53,23 @@ export function Navbar() {
           <div className="md:hidden w-10" />
 
           {/* Center: logo */}
-          <a
+          <motion.a
             href="#hero"
-            className="absolute left-1/2 -translate-x-1/2 translate-y-[1cm] flex items-center justify-center border-0 outline-none"
+            initial={{ rotate: 20, opacity: 0, scale: 0.96 }}
+            animate={{ rotate: 0, opacity: 1, scale: 1 }}
+            transition={{ delay: 0.04, duration: 0.3, ease: [0.2, 1, 0.3, 1] }}
+            className={`absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-0 outline-none transition-transform duration-500 ${
+              scrolled ? "translate-y-0" : "translate-y-[1cm]"
+            }`}
           >
             <img
               src={logo}
               alt="Crazy Toasty Toulouse"
-              className="w-auto h-[7.5rem] md:h-[11.25rem] border-0 outline-none"
+              className={`w-auto border-0 outline-none transition-all duration-500 ${
+                scrolled ? "h-[5.25rem] md:h-[7.5rem]" : "h-[7.5rem] md:h-[11.25rem]"
+              }`}
             />
-          </a>
+          </motion.a>
 
           {/* Right: nav */}
           <div className="hidden md:flex items-center gap-1">
@@ -83,7 +96,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-2"
           >
-            {links.map((l) => (
+            {mobileLinks.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
