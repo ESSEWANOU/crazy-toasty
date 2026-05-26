@@ -35,11 +35,10 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       title_suffix: " S'ARRACHENT",
     },
     menu: {
-      tag: "NOS BEST-SELLERS",
+      tag: "CARTE COMPLÈTE",
       title: "LE MENU QUI REND FOU",
       description:
-        "Les préférés de l'équipage. Poulet croustillant cuit à la commande, sauces maison, bowls qui défoncent.",
-      categories: {
+  "Tous les produits de la carte Crazy Toasty : riz crousty, burgers, wings, sides, sauces, boissons, desserts et box.",      categories: {
         tout: "Tous",
         crousty_rice: "Crousty Rice",
         sides: "Accompagnements",

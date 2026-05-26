@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { formatPrice } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 
 // Local image fallbacks (par nom de plat)
@@ -85,18 +84,19 @@ const FALLBACK: Record<string, string> = {
   "Glace 2 Boules": glaceImg,
 };
 
-const ALL_CATEGORY = "Tout" as const;
+const ALL_CATEGORY = "Tous" as const;
 
 const CATEGORY_ORDER = [
-  "Crousty Rice",
-  "Sides",
-  "Crousty Bowl Salade",
-  "Tasty Burgers",
+  "Riz Crousty",
+  "Salades",
+  "Burgers",
   "Wings",
+  "Accompagnements",
+  "Kids",
   "Sauces",
   "Boissons",
   "Desserts",
-  "Kids",
+  "Box & Menus",
 ] as const;
 
 type Category = (typeof CATEGORY_ORDER)[number];
@@ -106,237 +106,423 @@ type Item = {
   id: string;
   name: string;
   description: string | null;
-  price_cents: number;
+  price: string;
   category: Category;
-  image_url: string | null;
-  sort_order: number;
+  imageUrl: string | null;
+  sortOrder: number;
 };
 
 const MENU_ITEMS: Item[] = [
   {
     id: "crousty-original",
     name: "Crousty Original — Douceur Thaï",
-    description: "Riz parfumé, poulet croustillant, toppings frais et sauce douceur thaï.",
-    price_cents: 1190,
-    category: "Crousty Rice",
-    image_url: bowlOg,
-    sort_order: 1,
+    description:
+      "Base de riz parfumé, sauce Croustille Maison, oignons frits maison et tender de poulet ultra croustillant.",
+    price: "9,90 €",
+    category: "Riz Crousty",
+    imageUrl: bowlOg,
+    sortOrder: 1,
   },
   {
     id: "korean-fusion",
-    name: "Korean Fusion",
-    description: "La version spicy avec sauce coréenne, croustillant et gros caractère.",
-    price_cents: 1290,
-    category: "Crousty Rice",
-    image_url: bowlSpicy,
-    sort_order: 2,
-  },
-  {
-    id: "royal-cordon",
-    name: "Royal Cordon Bleu",
-    description: "Poulet croustillant, cordon bleu royal et sauce signature.",
-    price_cents: 1290,
-    category: "Crousty Rice",
-    image_url: bowlCordon,
-    sort_order: 3,
+    name: "Korean Fusion ⭐",
+    description:
+      "Sauce signature Mayo Chili Thaï-Samouraï, crémeuse et savoureuse sans piquer.",
+    price: "9,90 €",
+    category: "Riz Crousty",
+    imageUrl: bowlSpicy,
+    sortOrder: 2,
   },
   {
     id: "cheesy-king",
     name: "Cheesy King",
-    description: "Bowl ultra cheesy avec cheddar fondant et croustillant maison.",
-    price_cents: 1190,
-    category: "Crousty Rice",
-    image_url: bowlUpload,
-    sort_order: 4,
+    description:
+      "Sauce cheddar fondue ultra crémeuse, gourmande à souhait.",
+    price: "9,90 €",
+    category: "Riz Crousty",
+    imageUrl: bowlUpload,
+    sortOrder: 3,
   },
   {
-    id: "classic-master",
-    name: "Classic Master",
-    description: "Burger généreux, poulet croustillant et sauce Crazy Burger.",
-    price_cents: 990,
-    category: "Tasty Burgers",
-    image_url: burgerClassicMaster,
-    sort_order: 10,
+    id: "verde-bomb",
+    name: "Verde Bomb — Sauce du Chef ⭐",
+    description:
+      "African Verde, création signature exclusive du chef.",
+    price: "10,90 €",
+    category: "Riz Crousty",
+    imageUrl: verdeBombImg,
+    sortOrder: 4,
   },
   {
-    id: "spicy-devil",
-    name: "Spicy Devil",
-    description: "Le burger qui chauffe avec sauce spicy et poulet croustillant.",
-    price_cents: 1090,
-    category: "Tasty Burgers",
-    image_url: burgerSpicyDevil,
-    sort_order: 11,
+    id: "royal-cordon-bleu",
+    name: "Royal Cordon Bleu ⭐",
+    description:
+      "Cordon bleu maison ultra fondant, poulet, jambon, fromage et sauce au choix.",
+    price: "11,90 €",
+    category: "Riz Crousty",
+    imageUrl: bowlCordon,
+    sortOrder: 5,
   },
+
   {
-    id: "bacon-attack",
-    name: "Bacon Attack",
-    description: "Bacon, fromage, poulet croustillant et sauce signature.",
-    price_cents: 1090,
-    category: "Tasty Burgers",
-    image_url: burgerBaconAttack,
-    sort_order: 12,
-  },
-  {
-    id: "crazy-caesar",
+    id: "crazy-caesar-crousty",
     name: "Crazy Caesar Crousty ⭐",
-    description: "Une Caesar street-food, fraîche, généreuse et croustillante.",
-    price_cents: 1190,
-    category: "Crousty Bowl Salade",
-    image_url: crazyCaesarCrousty,
-    sort_order: 20,
+    description:
+      "Salade fraîche, tomate, tomates cerises, concombre, oignons rouges, croûtons, poulet croustillant, parmesan et sauce Caesar maison.",
+    price: "10,90 €",
+    category: "Salades",
+    imageUrl: crazyCaesarCrousty,
+    sortOrder: 10,
   },
+
+  {
+    id: "original-tasty-burger",
+    name: "Original Tasty Burger",
+    description:
+      "Pain brioché toasté, filet de poulet ultra croustillant, salade, tomate, cornichons et sauce Tasty signature.",
+    price: "9,90 €",
+    category: "Burgers",
+    imageUrl: burgerClassicMaster,
+    sortOrder: 20,
+  },
+  {
+    id: "spicy-tasty-burger",
+    name: "Spicy Tasty Burger",
+    description:
+      "Pain brioché toasté, filet de poulet ultra croustillant, salade, tomate, cornichons et sauce piquante maison.",
+    price: "10,50 €",
+    category: "Burgers",
+    imageUrl: burgerSpicyDevil,
+    sortOrder: 21,
+  },
+
+  {
+    id: "wings-nature-classic",
+    name: "Wings Nature Classic",
+    description:
+      "Ailes croustillantes dorées, sauce au choix à part.",
+    price: "×6 7,90 € · ×10 11,90 € · Bucket ×16 17,90 €",
+    category: "Wings",
+    imageUrl: wingsNatureNew,
+    sortOrder: 30,
+  },
+  {
+    id: "wings-firestorm",
+    name: "Wings Firestorm 🔥",
+    description:
+      "Ailes croustillantes nappées de sauce piquante maison.",
+    price: "×6 8,50 € · ×10 12,90 € · Bucket ×16 18,90 €",
+    category: "Wings",
+    imageUrl: wingsBbq,
+    sortOrder: 31,
+  },
+  {
+    id: "wings-smoky-bbq",
+    name: "Wings Smoky BBQ",
+    description:
+      "Ailes croustillantes glacées à la sauce BBQ fumée maison.",
+    price: "×6 8,50 € · ×10 12,90 € · Bucket ×16 18,90 €",
+    category: "Wings",
+    imageUrl: wingsBbq,
+    sortOrder: 32,
+  },
+
   {
     id: "frites-maison",
     name: "Frites Maison",
-    description: "Frites croustillantes, simples et efficaces.",
-    price_cents: 390,
-    category: "Sides",
-    image_url: fritesMaisonImg,
-    sort_order: 30,
+    description:
+      "Frites épaisses dorées, croustillantes dehors, fondantes dedans, sel marin.",
+    price: "4,00 €",
+    category: "Accompagnements",
+    imageUrl: fritesMaisonImg,
+    sortOrder: 40,
   },
   {
-    id: "frites-cheddar",
+    id: "frites-cheddar-crazy",
     name: "Frites Cheddar Crazy",
-    description: "Frites maison avec cheddar fondant façon Crazy.",
-    price_cents: 490,
-    category: "Sides",
-    image_url: fritesCheddarImg,
-    sort_order: 31,
+    description:
+      "Frites épaisses nappées de cheddar fondu et d'oignons frits croustillants.",
+    price: "5,50 €",
+    category: "Accompagnements",
+    imageUrl: fritesCheddarImg,
+    sortOrder: 41,
   },
   {
-    id: "wings-bbq",
-    name: "Wings Smoky BBQ",
-    description: "Wings croustillantes, nappées de sauce BBQ smoky.",
-    price_cents: 690,
-    category: "Wings",
-    image_url: wingsBbq,
-    sort_order: 40,
-  },
-  {
-    id: "wings-nature",
-    name: "Wings Nature Classic",
-    description: "Wings croustillantes à tremper dans ta sauce préférée.",
-    price_cents: 650,
-    category: "Wings",
-    image_url: wingsNatureNew,
-    sort_order: 41,
-  },
-  {
-    id: "tenders",
-    name: "Tenders Croustillants ×3",
-    description: "Trois tenders dorés, généreux et ultra croustillants.",
-    price_cents: 590,
-    category: "Sides",
-    image_url: tendersImg,
-    sort_order: 50,
-  },
-  {
-    id: "nuggets",
-    name: "Nuggets Crousti ×4",
-    description: "Nuggets croustillants, parfaits avec une sauce maison.",
-    price_cents: 490,
-    category: "Sides",
-    image_url: nuggetsCroustiImg,
-    sort_order: 51,
+    id: "frites-crazy-style",
+    name: "Frites Crazy Style ⭐",
+    description:
+      "Frites épaisses, poulet croustillant effiloché, sauce Korean crémeuse et oignons frits.",
+    price: "7,90 €",
+    category: "Accompagnements",
+    imageUrl: fritesCrazy,
+    sortOrder: 42,
   },
   {
     id: "onion-rings",
     name: "Onion Rings ×4",
-    description: "Anneaux d'oignons dorés et bien croustillants.",
-    price_cents: 390,
-    category: "Sides",
-    image_url: onionRingsImg,
-    sort_order: 52,
+    description:
+      "4 anneaux d'oignons panés dorés à la panure ultra croustillante.",
+    price: "3,50 €",
+    category: "Accompagnements",
+    imageUrl: onionRingsImg,
+    sortOrder: 43,
   },
+  {
+    id: "tenders-croustillants",
+    name: "Tenders Croustillants ×3",
+    description:
+      "3 filets de poulet panés dorés, croustillants dehors et juteux dedans.",
+    price: "6,90 €",
+    category: "Accompagnements",
+    imageUrl: tendersImg,
+    sortOrder: 44,
+  },
+  {
+    id: "pickin-chicken",
+    name: "Pickin' Chicken ×6 ⭐",
+    description:
+      "6 morceaux de poulet à la chapelure ultra croustillante, 1 sauce au choix offerte.",
+    price: "6,90 €",
+    category: "Accompagnements",
+    imageUrl: crazyPopImg,
+    sortOrder: 45,
+  },
+  {
+    id: "nuggets-crousti-6",
+    name: "Nuggets Crousti ×6",
+    description:
+      "6 nuggets de poulet dorés et croustillants.",
+    price: "4,50 €",
+    category: "Accompagnements",
+    imageUrl: nuggetsCroustiImg,
+    sortOrder: 46,
+  },
+  {
+    id: "nuggets-crousti-10",
+    name: "Nuggets Crousti ×10",
+    description:
+      "10 nuggets dorés et croustillants, 1 sauce au choix.",
+    price: "6,90 €",
+    category: "Accompagnements",
+    imageUrl: nuggetsCroustiImg,
+    sortOrder: 47,
+  },
+
   {
     id: "kids-combo",
-    name: "Le Kids Combo",
-    description: "La formule enfant simple, croustillante et gourmande.",
-    price_cents: 790,
+    name: "Menu Crazy Kids",
+    description:
+      "4 Nuggets Crousti ou Mini Crousty Rice, petites frites maison et 1 Capri-Sun.",
+    price: "7,90 €",
     category: "Kids",
-    image_url: kidsComboImg,
-    sort_order: 60,
+    imageUrl: kidsComboImg,
+    sortOrder: 50,
+  },
+
+  {
+    id: "sauce-croustille-maison",
+    name: "Sauce Croustille Maison ⭐",
+    description: "La signature de la maison.",
+    price: "0,80 €",
+    category: "Sauces",
+    imageUrl: sauceCrazyCroustille,
+    sortOrder: 60,
   },
   {
-    id: "sauce-crazy",
-    name: "Sauce Crazy Croustille",
-    description: "La sauce maison signature pour accompagner tes sides.",
-    price_cents: 90,
+    id: "sauce-spicy",
+    name: "Sauce Spicy 🔥",
+    description: "Sauce piquante à base de chili.",
+    price: "0,80 €",
     category: "Sauces",
-    image_url: sauceCrazyCroustille,
-    sort_order: 70,
+    imageUrl: saucesAll,
+    sortOrder: 61,
   },
   {
-    id: "sauce-burger",
-    name: "Sauce Crazy Burger",
-    description: "Onctueuse, gourmande, pensée pour burgers et frites.",
-    price_cents: 90,
+    id: "sauce-bbq-fumee",
+    name: "Sauce BBQ Fumée",
+    description: "Sauce BBQ maison aux notes fumées.",
+    price: "0,80 €",
     category: "Sauces",
-    image_url: sauceCrazyBurger,
-    sort_order: 71,
+    imageUrl: sauceBbq,
+    sortOrder: 62,
+  },
+  {
+    id: "sauce-cheddar",
+    name: "Sauce Cheddar",
+    description: "Cheddar fondu crémeux.",
+    price: "0,80 €",
+    category: "Sauces",
+    imageUrl: sauceCheddar,
+    sortOrder: 63,
+  },
+  {
+    id: "sauce-verde",
+    name: "Sauce Verde",
+    description: "African Verde, signature du chef.",
+    price: "0,80 €",
+    category: "Sauces",
+    imageUrl: sauceVerde,
+    sortOrder: 64,
   },
   {
     id: "sauce-korean",
-    name: "Sauce Korean Spicy 🔥",
-    description: "La sauce qui réveille ton plat.",
-    price_cents: 90,
+    name: "Sauce Korean",
+    description: "Sauce à base de mayonnaise.",
+    price: "0,80 €",
     category: "Sauces",
-    image_url: sauceKorean,
-    sort_order: 72,
+    imageUrl: sauceKorean,
+    sortOrder: 65,
   },
   {
-    id: "citronnade",
+    id: "sauce-burger-crazy",
+    name: "Sauce Burger Crazy",
+    description: "Sauce signature burger.",
+    price: "0,80 €",
+    category: "Sauces",
+    imageUrl: sauceCrazyBurger,
+    sortOrder: 66,
+  },
+
+  {
+    id: "eau",
+    name: "Eau (50cl)",
+    description: "Plate ou pétillante.",
+    price: "1,50 €",
+    category: "Boissons",
+    imageUrl: eauImg,
+    sortOrder: 70,
+  },
+  {
+    id: "soda",
+    name: "Soda (33cl)",
+    description: "Coca, Coca Zero, Sprite, Fanta ou Oasis.",
+    price: "2,00 €",
+    category: "Boissons",
+    imageUrl: sodaImg,
+    sortOrder: 71,
+  },
+  {
+    id: "milkshake-classic",
+    name: "Milkshake Classic",
+    description: "Vanille, chocolat, fraise ou Oreo.",
+    price: "5,80 €",
+    category: "Boissons",
+    imageUrl: milkshakeClassic,
+    sortOrder: 72,
+  },
+  {
+    id: "speculoos-dream",
+    name: "Speculoos Dream ⭐",
+    description: "Milkshake crémeux au biscuit speculoos.",
+    price: "5,80 €",
+    category: "Boissons",
+    imageUrl: milkshakeClassic,
+    sortOrder: 73,
+  },
+  {
+    id: "caramel-beurre-sale",
+    name: "Caramel Beurre Salé ⭐",
+    description: "Milkshake au caramel beurre salé maison.",
+    price: "5,80 €",
+    category: "Boissons",
+    imageUrl: milkshakeCaramel,
+    sortOrder: 74,
+  },
+  {
+    id: "citronnade-maison",
     name: "Citronnade Maison",
-    description: "Fraîche, acidulée et parfaite avec du croustillant.",
-    price_cents: 350,
+    description: "Pressée, faite maison chaque jour, fraîche et désaltérante.",
+    price: "3,50 €",
     category: "Boissons",
-    image_url: citronnadeImg,
-    sort_order: 80,
+    imageUrl: citronnadeImg,
+    sortOrder: 75,
   },
   {
-    id: "the-glace",
+    id: "the-glace-peche",
     name: "Thé glacé pêche",
-    description: "La boisson fraîche et fruitée.",
-    price_cents: 290,
+    description: "Bouteille 33cl.",
+    price: "2,50 €",
     category: "Boissons",
-    image_url: theGlaceImg,
-    sort_order: 81,
+    imageUrl: theGlaceImg,
+    sortOrder: 76,
   },
+
   {
-    id: "milkshake-caramel",
-    name: "Milkshake Caramel Beurre Salé",
-    description: "Milkshake gourmand au caramel beurre salé.",
-    price_cents: 490,
-    category: "Boissons",
-    image_url: milkshakeCaramel,
-    sort_order: 82,
-  },
-  {
-    id: "cookie",
+    id: "cookie-noisette-chocolat",
     name: "Cookie Noisette Chocolat Maison",
-    description: "Cookie maison, fondant et croustillant.",
-    price_cents: 350,
+    description:
+      "Cookie XXL maison aux pépites de chocolat et éclats de noisettes torréfiées.",
+    price: "3,90 €",
     category: "Desserts",
-    image_url: cookieImg,
-    sort_order: 90,
+    imageUrl: cookieImg,
+    sortOrder: 80,
   },
   {
-    id: "brownie",
+    id: "brownie-maison",
     name: "Brownie Maison",
-    description: "Brownie chocolat, dense et généreux.",
-    price_cents: 390,
+    description: "Brownie maison ultra fondant au chocolat noir intense.",
+    price: "3,50 €",
     category: "Desserts",
-    image_url: brownieImg,
-    sort_order: 91,
+    imageUrl: brownieImg,
+    sortOrder: 81,
   },
   {
-    id: "cheesecake",
-    name: "Speculoos Cheesecake",
-    description: "Cheesecake gourmand au speculoos.",
-    price_cents: 450,
+    id: "speculoos-cheesecake",
+    name: "Speculoos Cheesecake ⭐",
+    description: "Cheesecake maison crémeux sur lit de biscuit speculoos croustillant.",
+    price: "4,50 €",
     category: "Desserts",
-    image_url: cheesecakeImg,
-    sort_order: 92,
+    imageUrl: cheesecakeImg,
+    sortOrder: 82,
+  },
+  {
+    id: "glace-2-boules",
+    name: "Glace 2 Boules",
+    description: "Vanille, chocolat ou fraise.",
+    price: "3,50 €",
+    category: "Desserts",
+    imageUrl: glaceImg,
+    sortOrder: 83,
+  },
+
+  {
+    id: "option-menu",
+    name: "Option Menu",
+    description: "Frites Maison + Boisson 33cl.",
+    price: "+2,50 €",
+    category: "Box & Menus",
+    imageUrl: fritesMaisonImg,
+    sortOrder: 90,
+  },
+  {
+    id: "box-a-solo-crazy",
+    name: "Box A · Solo Crazy",
+    description:
+      "1 Croustille au choix, 2 Tenders Croustillants, 1 Boisson 33cl et 1 Sauce au choix.",
+    price: "13,90 €",
+    category: "Box & Menus",
+    imageUrl: null,
+    sortOrder: 91,
+  },
+  {
+    id: "box-b-crazy-master",
+    name: "Box B · Crazy Master ⭐",
+    description:
+      "1 Croustille au choix, 3 Wings, 2 Tenders Croustillants, 1 Boisson 33cl et 2 Sauces offertes.",
+    price: "16,90 €",
+    category: "Box & Menus",
+    imageUrl: null,
+    sortOrder: 92,
+  },
+  {
+    id: "box-c-crazy-duo",
+    name: "Box C · Crazy Duo ⭐",
+    description:
+      "2 Croustilles au choix, 6 Wings, 3 Onion Rings, 2 Boissons 33cl et 2 Sauces offertes.",
+    price: "29,90 €",
+    category: "Box & Menus",
+    imageUrl: null,
+    sortOrder: 93,
   },
 ];
 
@@ -348,7 +534,7 @@ const sortedMenuItems = [...MENU_ITEMS].sort((a, b) => {
   const byCategory = categoryRank.get(a.category)! - categoryRank.get(b.category)!;
   if (byCategory !== 0) return byCategory;
 
-  const bySortOrder = a.sort_order - b.sort_order;
+  const bySortOrder = a.sortOrder - b.sortOrder;
   if (bySortOrder !== 0) return bySortOrder;
 
   return a.name.localeCompare(b.name);
@@ -371,7 +557,6 @@ export function Menu() {
   const { t } = useI18n();
   const filtered = getFilteredItems(active);
 
-  const slugKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_");
 
   return (
     <section id="menu" className="relative bg-card/30 py-16 md:py-24 content-auto">
@@ -388,8 +573,8 @@ export function Menu() {
 
         <div className="mx-auto mb-12 flex max-w-5xl flex-wrap justify-center gap-2 md:gap-3">
           {filterCategories.map((c) => {
-            const label = t(`menu.categories.${slugKey(c)}`);
-            return (
+  const label = c;
+  return (
               <button
                 key={c}
                 onClick={() => setActive(c)}
@@ -415,10 +600,10 @@ export function Menu() {
     </section>
   );
 }
-
 function MenuCard({ item }: { item: Item }) {
   const { t } = useI18n();
-  const img = item.image_url || FALLBACK[item.name];
+  const img = item.imageUrl;
+
   return (
     <article className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/90 shadow-card transition-colors duration-200 hover:border-primary/35">
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -442,21 +627,21 @@ function MenuCard({ item }: { item: Item }) {
           </div>
         )}
 
-        {/* Gradient overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/10" />
       </div>
 
-      {/* Text block */}
       <div className="relative p-6">
-        <h3 className="mb-2 flex items-start justify-between gap-4 font-display text-xl md:text-2xl">
-          <span className="min-w-0 flex-1">{item.name}</span>
-          <span className="inline-flex shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1 font-sans text-base font-extrabold leading-none text-emerald-300">
-            {formatPrice(item.price_cents)}
-          </span>
+        <h3 className="mb-3 font-display text-xl md:text-2xl">
+          {item.name}
         </h3>
+
+        <div className="mb-4 inline-flex max-w-full rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300">
+          {item.price}
+        </div>
+
         {item.description && (
-          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
             {item.description}
           </p>
         )}
