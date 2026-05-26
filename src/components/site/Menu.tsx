@@ -126,6 +126,19 @@ const CATEGORY_ORDER = [
 
 type Category = (typeof CATEGORY_ORDER)[number];
 
+const CATEGORY_EMOJI: Record<Category, string> = {
+  "Riz Crousty": "🥘",
+  Salades: "🥬",
+  Burgers: "🍔",
+  Wings: "🍗",
+  Accompagnements: "🍟",
+  Kids: "🧒",
+  Sauces: "🥣",
+  Boissons: "🥤",
+  Desserts: "🍰",
+  "Box & Menus": "🍱",
+};
+
 type PriceOption = {
   id: string;
   label: string;
@@ -651,13 +664,15 @@ export function Menu() {
               type="button"
               onClick={() => setActive(category)}
               aria-pressed={active === category}
-              className={`min-h-10 max-w-full rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-normal break-words transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
+              aria-label={category}
+              className={`inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-normal break-words transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
                 active === category
                   ? "bg-primary text-primary-foreground shadow-glow"
                   : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
               }`}
             >
-              {category}
+              <span aria-hidden="true">{CATEGORY_EMOJI[category]}</span>
+              <span>{category}</span>
             </button>
           ))}
         </div>

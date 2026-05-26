@@ -71,7 +71,7 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       p2: "No frozen food. No bullshit. Just real food, made here in Toulouse.",
     },
     menu: {
-      tag: "OUR BEST-SELLERS",
+      tag: "",
       title: "THE MENU THAT MAKES YOU CRAZY",
       description: "",
       photoSoon: "Photo coming soon",
