@@ -126,6 +126,11 @@ function SavedOrderPanel({
           ))}
         </ul>
       )}
+
+      <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground/70">
+        Cette sélection vous aide à mémoriser vos choix avant de commander. L’envoi des commandes
+        directement depuis le site n’est pas encore disponible.
+      </p>
     </div>
   );
 }
