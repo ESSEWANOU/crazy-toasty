@@ -67,6 +67,11 @@ function getSavedItemTotal(item: SavedItem) {
   return item.priceCents * item.quantity;
 }
 
+function formatOptionPieces(label: string) {
+  const count = label.match(/\d+/)?.[0];
+  return count ? `${count} pieces` : label.trim();
+}
+
 function SavedOrderPanel({
   items,
   totalCents,
@@ -614,9 +619,10 @@ export function Menu() {
   const totalCents = savedItems.reduce((total, item) => total + item.priceCents * item.quantity, 0);
 
   function handleSaveItem(item: Item, selectedPrice?: PriceOption) {
-    const priceLabel = selectedPrice
-      ? `${selectedPrice.label} ${selectedPrice.value.trim()}`
-      : (item.price ?? "");
+    const itemName = selectedPrice
+      ? `${item.name.trim()} (${formatOptionPieces(selectedPrice.label)})`
+      : item.name.trim();
+    const priceLabel = selectedPrice ? selectedPrice.value.trim() : (item.price ?? "");
 
     const priceCents = priceToCents(priceLabel);
 
@@ -635,7 +641,7 @@ export function Menu() {
         ...currentItems,
         {
           id: savedId,
-          name: item.name,
+          name: itemName,
           priceLabel,
           priceCents,
           quantity: 1,
