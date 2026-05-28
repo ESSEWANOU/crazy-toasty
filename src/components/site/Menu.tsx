@@ -5,8 +5,12 @@ import bowlSpicy from "@/assets/bowl-spicy.webp";
 import bowlCordon from "@/assets/royal-cordon.webp";
 import bowlUpload from "@/assets/bowl-upload.webp";
 import fritesCrazy from "@/assets/frites-crazy.webp";
-import wingsBbq from "@/assets/wings-bbq.webp";
-import cookieImg from "@/assets/cookie.webp";
+import boxASoloCrazy from "@/assets/Box A · Solo Crazy.png";
+import boxBCrazyMaster from "@/assets/Box B · Crazy Master.png";
+import boxCCrazyDuo from "@/assets/Box C.png";
+import wingsFirestorm from "@/assets/Wings Firestorm.png";
+import wingsSmokyBbq from "@/assets/Wings Smoky BBQ.png";
+import cookieNoisetteChocolat from "@/assets/Cookie Noisette Chocolat Maison.png";
 import brownieImg from "@/assets/brownie.webp";
 import cheesecakeImg from "@/assets/cheesecake.webp";
 import glaceImg from "@/assets/glace.webp";
@@ -31,7 +35,7 @@ import sauceBbq from "@/assets/sauce-bbq.webp";
 import sauceCheddar from "@/assets/sauce-cheddar.webp";
 import sauceCrazyBurger from "@/assets/sauce-crazy-burger.webp";
 import sauceCrazyCroustille from "@/assets/sauce-crazy-croustille.webp";
-import saucesAll from "@/assets/sauces-all.webp";
+import sauceSpicy from "@/assets/sauce-spicy.png";
 import sauceVerde from "@/assets/sauce-verde.webp";
 import sauceKorean from "@/assets/sauce-korean.webp";
 import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
@@ -259,7 +263,7 @@ const MENU_ITEMS: Item[] = [
       { id: "x16", label: "×16", value: " 18,90 €" },
     ],
     category: "Wings",
-    imageUrl: wingsBbq,
+    imageUrl: wingsFirestorm,
     sortOrder: 31,
   },
   {
@@ -272,7 +276,7 @@ const MENU_ITEMS: Item[] = [
       { id: "x16", label: "×16", value: " 18,90 €" },
     ],
     category: "Wings",
-    imageUrl: wingsBbq,
+    imageUrl: wingsSmokyBbq,
     sortOrder: 32,
   },
 
@@ -376,7 +380,7 @@ const MENU_ITEMS: Item[] = [
     description: "Sauce piquante à base de chili.",
     price: "0,80 €",
     category: "Sauces",
-    imageUrl: saucesAll,
+    imageUrl: sauceSpicy,
     sortOrder: 61,
   },
   {
@@ -495,7 +499,7 @@ const MENU_ITEMS: Item[] = [
     description: "Cookie XXL maison aux pépites de chocolat et éclats de noisettes torréfiées.",
     price: "3,90 €",
     category: "Desserts",
-    imageUrl: cookieImg,
+    imageUrl: cookieNoisetteChocolat,
     sortOrder: 80,
   },
   {
@@ -542,7 +546,7 @@ const MENU_ITEMS: Item[] = [
       "1 Croustille au choix, 2 Tenders Croustillants, 1 Boisson 33cl et 1 Sauce au choix.",
     price: "13,90 €",
     category: "Box & Menus",
-    imageUrl: null,
+    imageUrl: boxASoloCrazy,
     sortOrder: 91,
   },
   {
@@ -552,7 +556,7 @@ const MENU_ITEMS: Item[] = [
       "1 Croustille au choix, 3 Wings, 2 Tenders Croustillants, 1 Boisson 33cl et 2 Sauces offertes.",
     price: "16,90 €",
     category: "Box & Menus",
-    imageUrl: null,
+    imageUrl: boxBCrazyMaster,
     sortOrder: 92,
   },
   {
@@ -562,7 +566,7 @@ const MENU_ITEMS: Item[] = [
       "2 Croustilles au choix, 6 Wings, 3 Onion Rings, 2 Boissons 33cl et 2 Sauces offertes.",
     price: "29,90 €",
     category: "Box & Menus",
-    imageUrl: null,
+    imageUrl: boxCCrazyDuo,
     sortOrder: 93,
   },
 ];
