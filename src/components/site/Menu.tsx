@@ -63,6 +63,10 @@ function formatEuro(cents: number) {
   return `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 }
 
+function getSavedItemTotal(item: SavedItem) {
+  return item.priceCents * item.quantity;
+}
+
 function SavedOrderPanel({
   items,
   totalCents,
@@ -92,11 +96,19 @@ function SavedOrderPanel({
               key={item.id}
               className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/80 p-3"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="font-semibold">{item.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {item.quantity} × {item.priceLabel}
-                </p>
+                <div className="mt-1 flex flex-wrap gap-2 font-sans text-xs font-bold text-muted-foreground">
+                  <span className="rounded-full border border-border/70 bg-card/80 px-2 py-1">
+                    Quantité : {item.quantity}
+                  </span>
+                  <span className="rounded-full border border-border/70 bg-card/80 px-2 py-1">
+                    Prix : {item.priceLabel}
+                  </span>
+                  <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-emerald-300">
+                    Total : {formatEuro(getSavedItemTotal(item))}
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
@@ -774,14 +786,15 @@ function MenuCard({
                       <button
                         type="button"
                         onClick={() => handlePriceOptionClick(price)}
-                        className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-card"
+                        className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-card"
                       >
-                        <span className="flex items-center gap-2 font-sans text-sm font-bold text-foreground">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-                          {price.label}
+                        <span className="flex min-w-0 flex-col gap-1 font-sans text-sm font-bold text-foreground">
+                          <span className="text-xs uppercase text-muted-foreground">Quantité</span>
+                          <span>{price.label}</span>
                         </span>
-                        <span className="font-sans text-sm font-extrabold text-emerald-300">
-                          {price.value.trim()}
+                        <span className="flex shrink-0 flex-col gap-1 text-right font-sans text-sm font-extrabold text-emerald-300">
+                          <span className="text-xs uppercase text-muted-foreground">Prix</span>
+                          <span>{price.value.trim()}</span>
                         </span>
                       </button>
                     </li>

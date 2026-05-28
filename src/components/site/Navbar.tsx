@@ -4,10 +4,16 @@ import { Menu, X } from "lucide-react";
 import logo from "@/assets/logo.webp";
 import { useI18n } from "@/lib/i18n";
 
-export function Navbar() {
+export function Navbar({ compact = false }: { compact?: boolean } = {}) {
   const { t, lang, setLang } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const logoOffsetClass = compact ? "translate-y-0" : "translate-y-[1cm]";
+  const logoSizeClass = compact
+    ? "h-[2.625rem] md:h-[3.75rem]"
+    : scrolled
+      ? "h-[5.25rem] md:h-[7.5rem]"
+      : "h-[7.5rem] md:h-[11.25rem]";
 
   const links = [
     { href: "#concept", label: t("nav.concept") },
@@ -33,7 +39,7 @@ export function Navbar() {
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? "py-3" : "py-5"
+        compact ? "py-2" : scrolled ? "py-3" : "py-5"
       }`}
     >
       <div className="container mx-auto px-4">
@@ -60,9 +66,7 @@ export function Navbar() {
             initial={{ rotate: 20, opacity: 0, scale: 0.96 }}
             animate={{ rotate: 0, opacity: 1, scale: 1 }}
             transition={{ delay: 0.04, duration: 0.3, ease: [0.2, 1, 0.3, 1] }}
-            className={`absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-0 outline-none transition-transform duration-500 ${
-              scrolled ? "translate-y-0" : "translate-y-[1cm]"
-            }`}
+            className={`absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-0 outline-none transition-transform duration-500 ${logoOffsetClass}`}
           >
             <img
               src={logo}
@@ -70,9 +74,7 @@ export function Navbar() {
               width={420}
               height={375}
               decoding="async"
-              className={`w-auto border-0 outline-none transition-all duration-500 ${
-                scrolled ? "h-[5.25rem] md:h-[7.5rem]" : "h-[7.5rem] md:h-[11.25rem]"
-              }`}
+              className={`w-auto border-0 outline-none transition-all duration-500 ${logoSizeClass}`}
             />
           </motion.a>
 

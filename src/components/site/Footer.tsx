@@ -1,4 +1,5 @@
 import { Instagram, Facebook } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n";
 
 export function Footer() {
@@ -44,24 +45,14 @@ export function Footer() {
             <div className="font-display mb-3 uppercase tracking-wide">{t("footer.legal")}</div>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <Link to="/mentions-legales" className="hover:text-primary transition-colors">
                   {t("footer.legal_notice")}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  {t("footer.terms")}
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <Link to="/confidentialite" className="hover:text-primary transition-colors">
                   {t("footer.privacy")}
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  {t("footer.cookies")}
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
