@@ -5,20 +5,20 @@ import type { StoreLocation } from "./StoresMap";
 
 const StoresMap = lazy(() => import("./StoresMap").then((m) => ({ default: m.StoresMap })));
 
-const stores: StoreLocation[] = [
-  {
-    city: "Toulouse — Jean Jaurès",
-    addr: "2 rue Paul Mériel, 31000 Toulouse (à 2 min du métro Jean Jaurès)",
-    lat: 43.6064,
-    lng: 1.4505,
-  },
-];
-
 export function Order() {
   const [active, setActive] = useState(0);
   const [mapVisible, setMapVisible] = useState(false);
   const mapWrapperRef = useRef<HTMLDivElement | null>(null);
   const { t } = useI18n();
+  const stores: StoreLocation[] = [
+    {
+      city: t("order.storeCity"),
+      addr: t("order.storeAddress"),
+      directionsQuery: "2 rue Paul Mériel, 31000 Toulouse",
+      lat: 43.6064,
+      lng: 1.4505,
+    },
+  ];
 
   useEffect(() => {
     const element = mapWrapperRef.current;
@@ -71,7 +71,7 @@ export function Order() {
                       <div className="text-sm text-muted-foreground">{s.addr}</div>
                     </div>
                     <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.addr + ", Toulouse")}`}
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.directionsQuery)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}

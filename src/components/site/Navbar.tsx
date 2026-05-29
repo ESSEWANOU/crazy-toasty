@@ -14,16 +14,17 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
     : scrolled
       ? "h-[5.25rem] md:h-[7.5rem]"
       : "h-[7.5rem] md:h-[11.25rem]";
+  const sectionHref = (id: string) => `${compact ? "/" : ""}#${id}`;
 
   const links = [
-    { href: "#concept", label: t("nav.concept") },
-    { href: "#menu", label: t("nav.menu") },
+    { href: sectionHref("concept"), label: t("nav.concept") },
+    { href: sectionHref("menu"), label: t("nav.menu") },
   ];
 
   const mobileLinks = [
-    { href: "#menu", label: t("nav.menu") },
-    { href: "#concept", label: t("nav.concept") },
-    { href: "#adresses", label: t("nav.where") },
+    { href: sectionHref("menu"), label: t("nav.menu") },
+    { href: sectionHref("concept"), label: t("nav.concept") },
+    { href: sectionHref("adresses"), label: t("nav.where") },
   ];
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
 
           {/* Center: logo */}
           <motion.a
-            href="#hero"
+            href={compact ? "/" : "#hero"}
             initial={{ rotate: 20, opacity: 0, scale: 0.96 }}
             animate={{ rotate: 0, opacity: 1, scale: 1 }}
             transition={{ delay: 0.04, duration: 0.3, ease: [0.2, 1, 0.3, 1] }}
@@ -96,7 +97,7 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
                 className={`px-2 py-1 rounded text-sm ${
                   lang === "fr" ? "bg-white/10" : "hover:bg-white/5"
                 }`}
-                aria-label="Français"
+                aria-label={t("nav.french")}
               >
                 FR
               </button>
@@ -105,7 +106,7 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
                 className={`px-2 py-1 rounded text-sm ${
                   lang === "en" ? "bg-white/10" : "hover:bg-white/5"
                 }`}
-                aria-label="English"
+                aria-label={t("nav.english")}
               >
                 EN
               </button>
@@ -113,7 +114,11 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
           </div>
 
           {/* Mobile menu button */}
-          <button onClick={() => setOpen(!open)} className="md:hidden p-2" aria-label="Menu">
+          <button
+            onClick={() => setOpen(!open)}
+            className="md:hidden p-2"
+            aria-label={t(open ? "nav.closeMenu" : "nav.toggleMenu")}
+          >
             {open ? <X /> : <Menu />}
           </button>
         </div>

@@ -1,16 +1,18 @@
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import bowlOg from "@/assets/bowl-og.webp";
 import bowlSpicy from "@/assets/bowl-spicy.webp";
 import bowlCordon from "@/assets/royal-cordon.webp";
 import bowlUpload from "@/assets/bowl-upload.webp";
 import fritesCrazy from "@/assets/frites-crazy.webp";
-import boxASoloCrazy from "@/assets/Box A · Solo Crazy.png";
-import boxBCrazyMaster from "@/assets/Box B · Crazy Master.png";
-import boxCCrazyDuo from "@/assets/Box C.png";
-import wingsFirestorm from "@/assets/Wings Firestorm.png";
-import wingsSmokyBbq from "@/assets/Wings Smoky BBQ.png";
-import cookieNoisetteChocolat from "@/assets/Cookie Noisette Chocolat Maison.png";
+import boxAImg from "@/assets/box-a.webp";
+import boxBImg from "@/assets/box-b.webp";
+import boxCImg from "@/assets/box-c.webp";
+import boxDImg from "@/assets/box-d.webp";
+import wingsFirestorm from "@/assets/wings-firestorm.webp";
+import wingsSmokyBbq from "@/assets/wings-smoky-bbq.webp";
+import cookieNoisetteChocolat from "@/assets/cookie-noisette-chocolat-maison.webp";
 import brownieImg from "@/assets/brownie.webp";
 import cheesecakeImg from "@/assets/cheesecake.webp";
 import glaceImg from "@/assets/glace.webp";
@@ -19,6 +21,7 @@ import sodaImg from "@/assets/soda.webp";
 import citronnadeImg from "@/assets/citronnade.webp";
 import theGlaceImg from "@/assets/the-glace.webp";
 import milkshakeClassic from "@/assets/milkshake-classic.webp";
+import milkshakeSpeculoos from "@/assets/milkshake-speculoos.webp";
 import milkshakeCaramel from "@/assets/milkshake-caramel.webp";
 import tendersImg from "@/assets/tenders.webp";
 import fritesMaisonImg from "@/assets/frites-maison.webp";
@@ -31,13 +34,17 @@ import nuggetsCroustiImg from "@/assets/nuggets-new.webp";
 import crazyPopImg from "@/assets/crazy-pop.webp";
 import burgerClassicMaster from "@/assets/burger-classic-master.webp";
 import burgerSpicyDevil from "@/assets/burger-spicy-devil.webp";
+import baconAttackImg from "@/assets/bacon-attack.webp";
 import sauceBbq from "@/assets/sauce-bbq.webp";
 import sauceCheddar from "@/assets/sauce-cheddar.webp";
 import sauceCrazyBurger from "@/assets/sauce-crazy-burger.webp";
 import sauceCrazyCroustille from "@/assets/sauce-crazy-croustille.webp";
-import sauceSpicy from "@/assets/sauce-spicy.png";
+import sauceSpicy from "@/assets/sauce-spicy.webp";
 import sauceVerde from "@/assets/sauce-verde.webp";
 import sauceKorean from "@/assets/sauce-korean.webp";
+import ranchImg from "@/assets/ranch.webp";
+import ketchupImg from "@/assets/ketchup.webp";
+import mayonnaiseImg from "@/assets/mayonnaise.webp";
 import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
 
 // liste de sauvegarde pour le panier, à stocker dans le localStorage
@@ -68,8 +75,7 @@ function getSavedItemTotal(item: SavedItem) {
 }
 
 function formatOptionPieces(label: string) {
-  const count = label.match(/\d+/)?.[0];
-  return count ? `${count} pieces` : label.trim();
+  return label.trim();
 }
 
 function SavedOrderPanel({
@@ -81,11 +87,13 @@ function SavedOrderPanel({
   totalCents: number;
   onRemoveItem: (id: string) => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-card sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-sans text-base font-extrabold tracking-normal text-foreground sm:text-lg">
-          Commande
+          {t("menu.orderTitle")}
         </h2>
         <span className="font-sans text-sm font-bold text-foreground/70">
           {formatEuro(totalCents)}
@@ -93,7 +101,7 @@ function SavedOrderPanel({
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Aucun article pour le moment.</p>
+        <p className="text-sm text-muted-foreground">{t("menu.emptyOrder")}</p>
       ) : (
         <ul className="space-y-3">
           {items.map((item) => (
@@ -105,13 +113,13 @@ function SavedOrderPanel({
                 <p className="font-semibold">{item.name}</p>
                 <div className="mt-1 flex flex-wrap gap-2 font-sans text-xs font-bold text-muted-foreground">
                   <span className="rounded-full border border-border/70 bg-card/80 px-2 py-1">
-                    Quantité : {item.quantity}
+                    {t("menu.quantity")} : {item.quantity}
                   </span>
                   <span className="rounded-full border border-border/70 bg-card/80 px-2 py-1">
-                    Prix : {item.priceLabel}
+                    {t("menu.price")} : {item.priceLabel}
                   </span>
                   <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-emerald-300">
-                    Total : {formatEuro(getSavedItemTotal(item))}
+                    {t("menu.total")} : {formatEuro(getSavedItemTotal(item))}
                   </span>
                 </div>
               </div>
@@ -120,7 +128,7 @@ function SavedOrderPanel({
                 className="rounded-full border border-border/70 bg-card/80 px-3 py-1 text-sm font-semibold text-sunset-pink transition hover:border-primary/50 hover:text-primary"
                 onClick={() => onRemoveItem(item.id)}
               >
-                Supprimer
+                {t("menu.remove")}
               </button>
             </li>
           ))}
@@ -128,8 +136,7 @@ function SavedOrderPanel({
       )}
 
       <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground/70">
-        Cette sélection vous aide à mémoriser vos choix avant de commander. L’envoi des commandes
-        directement depuis le site n’est pas encore disponible.
+        {t("menu.savedNote")}
       </p>
     </div>
   );
@@ -139,30 +146,30 @@ function SavedOrderPanel({
 
 const CATEGORY_ORDER = [
   "Riz Crousty",
-  "Salades",
+  "Accompagnements",
+  "Crousty Bowl Salade",
   "Burgers",
   "Wings",
-  "Accompagnements",
-  "Kids",
   "Sauces",
+  "Box",
   "Boissons",
   "Desserts",
-  "Box & Menus",
+  "Kids",
 ] as const;
 
 type Category = (typeof CATEGORY_ORDER)[number];
 
 const CATEGORY_EMOJI: Record<Category, string> = {
   "Riz Crousty": "🥘",
-  Salades: "🥬",
+  Accompagnements: "🍟",
+  "Crousty Bowl Salade": "🥬",
   Burgers: "🍔",
   Wings: "🍗",
-  Accompagnements: "🍟",
-  Kids: "🧒",
   Sauces: "🥣",
+  Box: "🍱",
   Boissons: "🥤",
   Desserts: "🍰",
-  "Box & Menus": "🍱",
+  Kids: "🧒",
 };
 
 type PriceOption = {
@@ -174,7 +181,9 @@ type PriceOption = {
 type Item = {
   id: string;
   name: string;
+  nameEn?: string;
   description: string | null;
+  descriptionEn?: string | null;
   price?: string;
   prices?: PriceOption[];
   category: Category;
@@ -182,12 +191,42 @@ type Item = {
   sortOrder: number;
 };
 
+type MenuLang = "fr" | "en";
+
+const CATEGORY_LABEL_KEY: Record<Category, string> = {
+  "Riz Crousty": "menu.categories.rizCrousty",
+  Accompagnements: "menu.categories.sides",
+  "Crousty Bowl Salade": "menu.categories.salad",
+  Burgers: "menu.categories.burgers",
+  Wings: "menu.categories.wings",
+  Sauces: "menu.categories.sauces",
+  Box: "menu.categories.box",
+  Boissons: "menu.categories.drinks",
+  Desserts: "menu.categories.desserts",
+  Kids: "menu.categories.kids",
+};
+
+function getMenuItemName(item: Item, lang: MenuLang) {
+  return lang === "en" && item.nameEn ? item.nameEn : item.name;
+}
+
+function getMenuItemDescription(item: Item, lang: MenuLang) {
+  if (lang === "en" && item.descriptionEn !== undefined) {
+    return item.descriptionEn;
+  }
+
+  return item.description;
+}
+
 const MENU_ITEMS: Item[] = [
   {
     id: "crousty-original",
     name: "Crousty Original — Douceur Thaï",
+    nameEn: "Crousty Original — Sweet Thai",
     description:
-      "Base de riz parfumé, sauce Croustille Maison, oignons frits maison et tender de poulet ultra croustillant.",
+      "Riz Thaï parfumé, sauce Croustille maison ultra crémeuse, oignons frits, tender de poulet ultra croustillant, touche de sauce Thaï douce et sucrée — sans piquant, la valeur sûre.",
+    descriptionEn:
+      "Fragrant Thai rice, ultra-creamy house Croustille sauce, crispy onions, an ultra-crispy chicken tender, a touch of sweet Thai sauce — mild and always a safe bet.",
     price: "9,90 €",
     category: "Riz Crousty",
     imageUrl: bowlOg,
@@ -195,8 +234,12 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "korean-fusion",
-    name: "Korean Fusion  ",
-    description: "Sauce signature Mayo Chili Thaï-Samouraï, crémeuse et savoureuse sans piquer.",
+    name: "Korean Fusion",
+    nameEn: "Korean Fusion",
+    description:
+      "Riz Thaï parfumé, sauce Croustille maison ultra crémeuse, oignons frits, tender croustillant, twist Mayo Chili Korean-Samouraï — la star !",
+    descriptionEn:
+      "Fragrant Thai rice, ultra-creamy house Croustille sauce, crispy onions, crispy tender, and a Korean-Samourai chili mayo twist — the star of the menu!",
     price: "9,90 €",
     category: "Riz Crousty",
     imageUrl: bowlSpicy,
@@ -205,7 +248,11 @@ const MENU_ITEMS: Item[] = [
   {
     id: "cheesy-king",
     name: "Cheesy King",
-    description: "Sauce cheddar fondue ultra crémeuse, gourmande à souhait.",
+    nameEn: "Cheesy King",
+    description:
+      "Riz Thaï parfumé, sauce Croustille maison ultra crémeuse, oignons frits, tender croustillant, cheddar fondu coulant — pour les vrais amateurs de fromage.",
+    descriptionEn:
+      "Fragrant Thai rice, ultra-creamy house Croustille sauce, crispy onions, crispy tender, and melting cheddar — made for true cheese lovers.",
     price: "9,90 €",
     category: "Riz Crousty",
     imageUrl: bowlUpload,
@@ -213,8 +260,12 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "verde-bomb",
-    name: "Verde Bomb — Sauce du Chef  ",
-    description: "African Verde, création signature exclusive du chef.",
+    name: "Verde Bomb — Sauce du Chef",
+    nameEn: "Verde Bomb — Chef's Sauce",
+    description:
+      "Riz Thaï parfumé, sauce Croustille maison ultra crémeuse, oignons frits, tender croustillant, nappé de notre fameuse African Verde — création signature du chef.",
+    descriptionEn:
+      "Fragrant Thai rice, ultra-creamy house Croustille sauce, crispy onions, crispy tender, topped with our famous African Verde — the chef's signature creation.",
     price: "10,90 €",
     category: "Riz Crousty",
     imageUrl: verdeBombImg,
@@ -222,8 +273,12 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "royal-cordon-bleu",
-    name: "Royal Cordon Bleu  ",
-    description: "Cordon bleu maison ultra fondant, poulet, jambon, fromage et sauce au choix.",
+    name: "Royal Cordon Bleu",
+    nameEn: "Royal Cordon Bleu",
+    description:
+      "Riz Thaï parfumé, sauce Croustille maison ultra crémeuse, oignons frits, cordon bleu maison ultra fondant (poulet + jambon + fromage qui coule). Sauce au choix : Thaï, Ranch, Cheddar ou Verde.",
+    descriptionEn:
+      "Fragrant Thai rice, ultra-creamy house Croustille sauce, crispy onions, and a melting house cordon bleu (chicken, ham, and cheese). Sauce of your choice: Thai, Ranch, Cheddar, or Verde.",
     price: "11,90 €",
     category: "Riz Crousty",
     imageUrl: bowlCordon,
@@ -231,230 +286,353 @@ const MENU_ITEMS: Item[] = [
   },
 
   {
-    id: "crazy-caesar-crousty",
-    name: "Crazy Caesar Crousty  ",
-    description:
-      "Salade fraîche, tomate, tomates cerises, concombre, oignons rouges, croûtons, poulet croustillant, parmesan et sauce Caesar maison.",
-    price: "10,90 €",
-    category: "Salades",
-    imageUrl: crazyCaesarCrousty,
+    id: "frites",
+    name: "Frites",
+    nameEn: "Fries",
+    description: null,
+    descriptionEn: null,
+    price: "4,00 €",
+    category: "Accompagnements",
+    imageUrl: fritesMaisonImg,
     sortOrder: 10,
+  },
+  {
+    id: "frites-cheddar-crazy",
+    name: "Frites Cheddar Crazy",
+    nameEn: "Cheddar Crazy Fries",
+    description: "Frites nappées de cheddar fondu coulant et oignons frits croustillants.",
+    descriptionEn: "Fries topped with melting cheddar and crispy fried onions.",
+    price: "4,50 €",
+    category: "Accompagnements",
+    imageUrl: fritesCheddarImg,
+    sortOrder: 11,
+  },
+  {
+    id: "frites-crazy-style",
+    name: "Frites Crazy Style",
+    nameEn: "Crazy Style Fries",
+    description:
+      "La signature : poulet croustillant effiloché, sauce Korean crémeuse, oignons frits.",
+    descriptionEn:
+      "The signature side: shredded crispy chicken, creamy Korean sauce, and crispy onions.",
+    price: "7,90 €",
+    category: "Accompagnements",
+    imageUrl: fritesCrazy,
+    sortOrder: 12,
+  },
+  {
+    id: "onion-rings-x4",
+    name: "Onion Rings ×4",
+    nameEn: "Onion Rings ×4",
+    description: "4 anneaux d'oignons panés.",
+    descriptionEn: "4 breaded onion rings.",
+    price: "4,50 €",
+    category: "Accompagnements",
+    imageUrl: onionRingsImg,
+    sortOrder: 13,
+  },
+  {
+    id: "tenders-croustillants-x3",
+    name: "Tenders Croustillants ×3",
+    nameEn: "Crispy Tenders ×3",
+    description: "3 filets de poulet panés dorés, ultra croustillants dehors, juteux dedans.",
+    descriptionEn: "3 golden breaded chicken strips, ultra-crispy outside and juicy inside.",
+    price: "5,50 €",
+    category: "Accompagnements",
+    imageUrl: tendersImg,
+    sortOrder: 14,
+  },
+  {
+    id: "nuggets-crousti-x4",
+    name: "Nuggets Crousti ×4",
+    nameEn: "Crousty Nuggets ×4",
+    description: "4 nuggets de poulet dorés et croustillants.",
+    descriptionEn: "4 golden, crispy chicken nuggets.",
+    price: "4,50 €",
+    category: "Accompagnements",
+    imageUrl: nuggetsCroustiImg,
+    sortOrder: 15,
+  },
+  {
+    id: "crazy-pop-x6",
+    name: "Crazy Pop ×6",
+    nameEn: "Crazy Pop ×6",
+    description: "Bouchées de poulet pop-corn ultra croustillantes. 1 sauce au choix offerte.",
+    descriptionEn: "Ultra-crispy popcorn chicken bites. 1 sauce of your choice included.",
+    price: "5,90 €",
+    category: "Accompagnements",
+    imageUrl: crazyPopImg,
+    sortOrder: 16,
   },
 
   {
-    id: "original-tasty-burger",
-    name: "Original Tasty Burger",
+    id: "crazy-caesar-crousty",
+    name: "Crazy Caesar Crousty",
+    nameEn: "Crazy Caesar Crousty",
     description:
-      "Pain brioché toasté, filet de poulet ultra croustillant, salade, tomate, cornichons et sauce Tasty signature.",
-    price: "9,90 €",
-    category: "Burgers",
-    imageUrl: burgerClassicMaster,
+      "Salade fraîche, tomate, tomates cerises, concombre, oignons rouges, croûtons dorés, poulet ultra croustillant, parmesan râpé et sauce Caesar maison.",
+    descriptionEn:
+      "Fresh salad, tomato, cherry tomatoes, cucumber, red onions, golden croutons, ultra-crispy chicken, grated parmesan, and house Caesar sauce.",
+    price: "10,90 €",
+    category: "Crousty Bowl Salade",
+    imageUrl: crazyCaesarCrousty,
     sortOrder: 20,
   },
+
   {
-    id: "spicy-tasty-burger",
-    name: "Spicy Tasty Burger",
+    id: "classic-master",
+    name: "Classic Master",
+    nameEn: "Classic Master",
     description:
-      "Pain brioché toasté, filet de poulet ultra croustillant, salade, tomate, cornichons et sauce piquante maison.",
-    price: "10,50 €",
+      "Filet de poulet ultra croustillant, cheddar fondant, salade fraîche, tomate juteuse, sauce maison signature.",
+    descriptionEn:
+      "Ultra-crispy chicken fillet, melting cheddar, fresh salad, juicy tomato, and signature house sauce.",
+    price: "10,40 €",
+    category: "Burgers",
+    imageUrl: burgerClassicMaster,
+    sortOrder: 30,
+  },
+  {
+    id: "spicy-devil",
+    name: "Spicy Devil",
+    nameEn: "Spicy Devil",
+    description:
+      "Filet croustillant, cheddar fondu, tomate, jalapeños relevés, sauce spicy maison qui réveille les papilles.",
+    descriptionEn:
+      "Crispy fillet, melted cheddar, tomato, punchy jalapeños, and house spicy sauce that wakes up your taste buds.",
+    price: "11,40 €",
     category: "Burgers",
     imageUrl: burgerSpicyDevil,
-    sortOrder: 21,
+    sortOrder: 31,
+  },
+  {
+    id: "bacon-attack",
+    name: "Bacon Attack",
+    nameEn: "Bacon Attack",
+    description:
+      "Filet croustillant, bacon fumé bien grillé, cheddar fondant, tomate fraîche, sauce Tasty.",
+    descriptionEn:
+      "Crispy fillet, well-grilled smoked bacon, melting cheddar, fresh tomato, and Tasty sauce.",
+    price: "12,40 €",
+    category: "Burgers",
+    imageUrl: baconAttackImg,
+    sortOrder: 32,
   },
 
   {
     id: "wings-nature-classic",
     name: "Wings Nature Classic",
-    description: "Ailes croustillantes dorées, sauce au choix à part.",
+    nameEn: "Wings Nature Classic",
+    description: "Wings croustillantes dorées, sauce au choix à part.",
+    descriptionEn: "Golden crispy wings, sauce of your choice on the side.",
     prices: [
-      { id: "x6", label: "×6", value: " 7,90 €" },
-      { id: "x10", label: "×10", value: " 11,90 €" },
-      { id: "x16", label: "×16", value: " 17,90 €" },
+      { id: "x6", label: "×6", value: "7,90 €" },
+      { id: "x10", label: "×10", value: "11,90 €" },
+      { id: "bucket-x16", label: "Bucket ×16", value: "17,90 €" },
     ],
     category: "Wings",
     imageUrl: wingsNatureNew,
-    sortOrder: 30,
+    sortOrder: 40,
   },
   {
     id: "wings-firestorm",
-    name: "Wings Firestorm ",
-    description: "Ailes croustillantes nappées de sauce piquante maison.",
+    name: "Wings Firestorm",
+    nameEn: "Wings Firestorm",
+    description: "Wings croustillantes nappées de notre sauce piquante maison qui claque.",
+    descriptionEn: "Crispy wings coated in our bold house hot sauce.",
     prices: [
-      { id: "x6", label: "×6", value: " 8,50 €" },
-      { id: "x10", label: "×10", value: " 12,90 €" },
-      { id: "x16", label: "×16", value: " 18,90 €" },
+      { id: "x6", label: "×6", value: "8,50 €" },
+      { id: "x10", label: "×10", value: "12,90 €" },
+      { id: "bucket-x16", label: "Bucket ×16", value: "18,90 €" },
     ],
     category: "Wings",
     imageUrl: wingsFirestorm,
-    sortOrder: 31,
+    sortOrder: 41,
   },
   {
     id: "wings-smoky-bbq",
     name: "Wings Smoky BBQ",
-    description: "Ailes croustillantes glacées à la sauce BBQ fumée maison.",
+    nameEn: "Wings Smoky BBQ",
+    description: "Wings croustillantes glacées à notre sauce BBQ fumée maison.",
+    descriptionEn: "Crispy wings glazed with our smoky house BBQ sauce.",
     prices: [
-      { id: "x6", label: "×6", value: " 8,50 €" },
-      { id: "x10", label: "×10", value: " 12,90 €" },
-      { id: "x16", label: "×16", value: " 18,90 €" },
+      { id: "x6", label: "×6", value: "8,50 €" },
+      { id: "x10", label: "×10", value: "12,90 €" },
+      { id: "bucket-x16", label: "Bucket ×16", value: "18,90 €" },
     ],
     category: "Wings",
     imageUrl: wingsSmokyBbq,
-    sortOrder: 32,
-  },
-
-  {
-    id: "frites-maison",
-    name: "Frites Maison",
-    description: "Frites épaisses dorées, croustillantes dehors, fondantes dedans, sel marin.",
-    price: "4,00 €",
-    category: "Accompagnements",
-    imageUrl: fritesMaisonImg,
-    sortOrder: 40,
-  },
-  {
-    id: "frites-cheddar-crazy",
-    name: "Frites Cheddar Crazy",
-    description: "Frites épaisses nappées de cheddar fondu et d'oignons frits croustillants.",
-    price: "5,50 €",
-    category: "Accompagnements",
-    imageUrl: fritesCheddarImg,
-    sortOrder: 41,
-  },
-  {
-    id: "frites-crazy-style",
-    name: "Frites Crazy Style  ",
-    description:
-      "Frites épaisses, poulet croustillant effiloché, sauce Korean crémeuse et oignons frits.",
-    price: "7,90 €",
-    category: "Accompagnements",
-    imageUrl: fritesCrazy,
     sortOrder: 42,
   },
+
   {
-    id: "onion-rings",
-    name: "Onion Rings ×4",
-    description: "4 anneaux d'oignons panés dorés à la panure ultra croustillante.",
-    price: "3,50 €",
-    category: "Accompagnements",
-    imageUrl: onionRingsImg,
-    sortOrder: 43,
-  },
-  {
-    id: "tenders-croustillants",
-    name: "Tenders Croustillants ×3",
-    description: "3 filets de poulet panés dorés, croustillants dehors et juteux dedans.",
-    price: "6,90 €",
-    category: "Accompagnements",
-    imageUrl: tendersImg,
-    sortOrder: 44,
-  },
-  {
-    id: "pickin-chicken",
-    name: "Pickin' Chicken ×6  ",
+    id: "sauce-crazy-croustille",
+    name: "Sauce Crazy Croustille",
+    nameEn: "Crazy Croustille Sauce",
     description:
-      "6 morceaux de poulet à la chapelure ultra croustillante, 1 sauce au choix offerte.",
-    price: "6,90 €",
-    category: "Accompagnements",
-    imageUrl: crazyPopImg,
-    sortOrder: 45,
-  },
-  {
-    id: "nuggets-crousti-6",
-    name: "Nuggets Crousti ×6",
-    description: "6 nuggets de poulet dorés et croustillants.",
-    price: "4,50 €",
-    category: "Accompagnements",
-    imageUrl: nuggetsCroustiImg,
-    sortOrder: 46,
-  },
-  {
-    id: "nuggets-crousti-10",
-    name: "Nuggets Crousti ×10",
-    description: "10 nuggets dorés et croustillants, 1 sauce au choix.",
-    price: "6,90 €",
-    category: "Accompagnements",
-    imageUrl: nuggetsCroustiImg,
-    sortOrder: 47,
-  },
-
-  {
-    id: "kids-combo",
-    name: "Menu Crazy Kids",
-    description: "4 Nuggets Crousti ou Mini Crousty Rice, petites frites maison et 1 Capri-Sun.",
-    price: "7,90 €",
-    category: "Kids",
-    imageUrl: kidsComboImg,
-    sortOrder: 50,
-  },
-
-  {
-    id: "sauce-croustille-maison",
-    name: "Sauce Croustille Maison  ",
-    description: "La signature de la maison.",
-    price: "0,80 €",
+      "Notre sauce signature maison ultra crémeuse, douce et parfumée — la star qui nappe nos bowls.",
+    descriptionEn:
+      "Our ultra-creamy, mild, fragrant house signature sauce — the star sauce on our bowls.",
+    price: "1,00 €",
     category: "Sauces",
     imageUrl: sauceCrazyCroustille,
-    sortOrder: 60,
+    sortOrder: 50,
   },
   {
-    id: "sauce-spicy",
-    name: "Sauce Spicy   ",
-    description: "Sauce piquante à base de chili.",
-    price: "0,80 €",
+    id: "sauce-crazy-burger",
+    name: "Sauce Crazy Burger",
+    nameEn: "Crazy Burger Sauce",
+    description: "Sauce maison rosée légèrement relevée, parfaite pour vos burgers et frites.",
+    descriptionEn: "A lightly spiced pink house sauce, perfect with burgers and fries.",
+    price: "1,00 €",
     category: "Sauces",
-    imageUrl: sauceSpicy,
-    sortOrder: 61,
-  },
-  {
-    id: "sauce-bbq-fumee",
-    name: "Sauce BBQ Fumée",
-    description: "Sauce BBQ maison aux notes fumées.",
-    price: "0,80 €",
-    category: "Sauces",
-    imageUrl: sauceBbq,
-    sortOrder: 62,
+    imageUrl: sauceCrazyBurger,
+    sortOrder: 51,
   },
   {
     id: "sauce-cheddar",
     name: "Sauce Cheddar",
-    description: "Cheddar fondu crémeux.",
-    price: "0,80 €",
+    nameEn: "Cheddar Sauce",
+    description: "Cheddar fondu coulant, riche et onctueux.",
+    descriptionEn: "Melting cheddar, rich and creamy.",
+    price: "1,00 €",
     category: "Sauces",
     imageUrl: sauceCheddar,
-    sortOrder: 63,
+    sortOrder: 52,
   },
   {
-    id: "sauce-verde",
-    name: "Sauce Verde",
-    description: "African Verde, signature du chef.",
-    price: "0,80 €",
+    id: "sauce-bbq-smoky",
+    name: "Sauce BBQ Smoky",
+    nameEn: "Smoky BBQ Sauce",
+    description: "Sauce BBQ fumée maison, sucrée-salée.",
+    descriptionEn: "House smoky BBQ sauce, sweet and savory.",
+    price: "1,00 €",
     category: "Sauces",
-    imageUrl: sauceVerde,
-    sortOrder: 64,
+    imageUrl: sauceBbq,
+    sortOrder: 53,
   },
   {
-    id: "sauce-korean",
-    name: "Sauce Korean",
-    description: "Sauce à base de mayonnaise.",
-    price: "0,80 €",
+    id: "sauce-ranch",
+    name: "Sauce Ranch",
+    nameEn: "Ranch Sauce",
+    description: "Sauce ranch crémeuse aux herbes fraîches, douce et rafraîchissante.",
+    descriptionEn: "Creamy ranch sauce with fresh herbs, mild and refreshing.",
+    price: "1,00 €",
+    category: "Sauces",
+    imageUrl: ranchImg,
+    sortOrder: 54,
+  },
+  {
+    id: "sauce-korean-spicy",
+    name: "Sauce Korean Spicy",
+    nameEn: "Korean Spicy Sauce",
+    description: "Sauce coréenne rouge intense, sucrée-légèrement piquante.",
+    descriptionEn: "Intense red Korean sauce, sweet and lightly spicy.",
+    price: "1,00 €",
     category: "Sauces",
     imageUrl: sauceKorean,
-    sortOrder: 65,
+    sortOrder: 55,
   },
   {
-    id: "sauce-burger-crazy",
-    name: "Sauce Burger Crazy",
-    description: "Sauce signature burger.",
-    price: "0,80 €",
+    id: "sauce-african-verde",
+    name: "Sauce African Verde",
+    nameEn: "African Verde Sauce",
+    description: "Notre sauce signature du chef, herbes fraîches, piment doux et coriandre.",
+    descriptionEn: "The chef's signature sauce with fresh herbs, mild chili, and coriander.",
+    price: "1,00 €",
     category: "Sauces",
-    imageUrl: sauceCrazyBurger,
-    sortOrder: 66,
+    imageUrl: sauceVerde,
+    sortOrder: 56,
+  },
+  {
+    id: "sauce-algerienne",
+    name: "Sauce Algérienne",
+    nameEn: "Algerian Sauce",
+    description: "Sauce épicée légèrement piquante, parfumée aux légumes et épices.",
+    descriptionEn: "A lightly spicy sauce flavored with vegetables and spices.",
+    price: "1,00 €",
+    category: "Sauces",
+    imageUrl: sauceSpicy,
+    sortOrder: 57,
+  },
+  {
+    id: "ketchup",
+    name: "Ketchup",
+    nameEn: "Ketchup",
+    description: "Ketchup classique pour les puristes.",
+    descriptionEn: "Classic ketchup for the purists.",
+    price: "1,00 €",
+    category: "Sauces",
+    imageUrl: ketchupImg,
+    sortOrder: 58,
+  },
+  {
+    id: "mayonnaise",
+    name: "Mayonnaise",
+    nameEn: "Mayonnaise",
+    description: "Mayo onctueuse.",
+    descriptionEn: "Smooth mayo.",
+    price: "1,00 €",
+    category: "Sauces",
+    imageUrl: mayonnaiseImg,
+    sortOrder: 59,
+  },
+
+  {
+    id: "box-a-combo-solo",
+    name: "Box A · Combo Solo",
+    nameEn: "Box A · Solo Combo",
+    description: "1 Croustille au choix + 1 Boisson 33cl + 1 Sauce offerte.",
+    descriptionEn: "1 Croustille of your choice + 1 33cl drink + 1 free sauce.",
+    price: "11,90 €",
+    category: "Box",
+    imageUrl: boxAImg,
+    sortOrder: 60,
+  },
+  {
+    id: "box-b-combo-express",
+    name: "Box B · Combo Express",
+    nameEn: "Box B · Express Combo",
+    description: "3 Tenders OU 6 Nuggets Crousti + 2 Wings + 1 Boisson 33cl.",
+    descriptionEn: "3 tenders OR 6 Crousty Nuggets + 2 wings + 1 33cl drink.",
+    price: "9,90 €",
+    category: "Box",
+    imageUrl: boxBImg,
+    sortOrder: 61,
+  },
+  {
+    id: "box-c-crazy-box",
+    name: "Box C · Crazy Box",
+    nameEn: "Box C · Crazy Box",
+    description:
+      "1 Croustille au choix + 3 Wings (sauce au choix) + 3 Tenders + 1 Boisson 33cl + 1 Sauce offerte.",
+    descriptionEn:
+      "1 Croustille of your choice + 3 wings (sauce of your choice) + 3 tenders + 1 33cl drink + 1 free sauce.",
+    price: "16,90 €",
+    category: "Box",
+    imageUrl: boxCImg,
+    sortOrder: 62,
+  },
+  {
+    id: "box-d-discovery-box",
+    name: "Box D · Discovery Box",
+    nameEn: "Box D · Discovery Box",
+    description:
+      "2 Crousty Rice au choix + 6 Wings + 1 Onion Rings ×6 + 2 Boissons 33cl + 2 Sauces offertes.",
+    descriptionEn:
+      "2 Crousty Rice bowls of your choice + 6 wings + 1 Onion Rings ×6 + 2 33cl drinks + 2 free sauces.",
+    price: "34,90 €",
+    category: "Box",
+    imageUrl: boxDImg,
+    sortOrder: 63,
   },
 
   {
     id: "eau",
     name: "Eau (50cl)",
+    nameEn: "Water (50cl)",
     description: "Plate ou pétillante.",
+    descriptionEn: "Still or sparkling.",
     price: "1,50 €",
     category: "Boissons",
     imageUrl: eauImg,
@@ -463,62 +641,78 @@ const MENU_ITEMS: Item[] = [
   {
     id: "soda",
     name: "Soda (33cl)",
-    description: "Coca, Coca Zero, Sprite, Fanta ou Oasis.",
+    nameEn: "Soda (33cl)",
+    description: "Coca, Coca Zero, Sprite, Fanta, Oasis.",
+    descriptionEn: "Coke, Coke Zero, Sprite, Fanta, Oasis.",
     price: "2,00 €",
     category: "Boissons",
     imageUrl: sodaImg,
     sortOrder: 71,
   },
   {
-    id: "milkshake-classic",
-    name: "Milkshake Classic",
-    description: "Vanille, chocolat, fraise ou Oreo.",
-    price: "5,80 €",
-    category: "Boissons",
-    imageUrl: milkshakeClassic,
-    sortOrder: 72,
-  },
-  {
-    id: "speculoos-dream",
-    name: "Speculoos Dream  ",
-    description: "Milkshake crémeux au biscuit speculoos.",
-    price: "5,80 €",
-    category: "Boissons",
-    imageUrl: milkshakeClassic,
-    sortOrder: 73,
-  },
-  {
-    id: "caramel-beurre-sale",
-    name: "Caramel Beurre Salé  ",
-    description: "Milkshake au caramel beurre salé maison.",
-    price: "5,80 €",
-    category: "Boissons",
-    imageUrl: milkshakeCaramel,
-    sortOrder: 74,
-  },
-  {
     id: "citronnade-maison",
     name: "Citronnade Maison",
+    nameEn: "House Lemonade",
     description: "Pressée, faite maison chaque jour, fraîche et désaltérante.",
+    descriptionEn: "Freshly squeezed, made in-house every day, fresh and thirst-quenching.",
     price: "3,50 €",
     category: "Boissons",
     imageUrl: citronnadeImg,
-    sortOrder: 75,
+    sortOrder: 72,
   },
   {
     id: "the-glace-peche",
     name: "Thé glacé pêche",
+    nameEn: "Peach Iced Tea",
     description: "Bouteille 33cl.",
+    descriptionEn: "33cl bottle.",
     price: "2,50 €",
     category: "Boissons",
     imageUrl: theGlaceImg,
+    sortOrder: 73,
+  },
+  {
+    id: "milkshake-classic",
+    name: "Milkshake Classic",
+    nameEn: "Classic Milkshake",
+    description: "Milkshake onctueux au choix : vanille, chocolat, fraise ou Oreo.",
+    descriptionEn:
+      "Smooth milkshake, flavor of your choice: vanilla, chocolate, strawberry, or Oreo.",
+    price: "5,80 €",
+    category: "Boissons",
+    imageUrl: milkshakeClassic,
+    sortOrder: 74,
+  },
+  {
+    id: "milkshake-speculoos-dream",
+    name: "Milkshake Speculoos Dream",
+    nameEn: "Speculoos Dream Milkshake",
+    description: "Milkshake ultra crémeux au biscuit speculoos qui fond en bouche.",
+    descriptionEn: "Ultra-creamy speculoos biscuit milkshake that melts in your mouth.",
+    price: "5,80 €",
+    category: "Boissons",
+    imageUrl: milkshakeSpeculoos,
+    sortOrder: 75,
+  },
+  {
+    id: "milkshake-caramel-beurre-sale",
+    name: "Milkshake Caramel Beurre Salé",
+    nameEn: "Salted Butter Caramel Milkshake",
+    description: "Milkshake onctueux au caramel beurre salé maison, gourmandise absolue.",
+    descriptionEn: "Smooth milkshake with house salted butter caramel, pure indulgence.",
+    price: "5,80 €",
+    category: "Boissons",
+    imageUrl: milkshakeCaramel,
     sortOrder: 76,
   },
 
   {
     id: "cookie-noisette-chocolat",
     name: "Cookie Noisette Chocolat Maison",
-    description: "Cookie XXL maison aux pépites de chocolat et éclats de noisettes torréfiées.",
+    nameEn: "House Hazelnut Chocolate Cookie",
+    description:
+      "Cookie XXL maison aux pépites de chocolat fondant et éclats de noisettes torréfiées.",
+    descriptionEn: "House XXL cookie with melting chocolate chips and roasted hazelnut pieces.",
     price: "3,90 €",
     category: "Desserts",
     imageUrl: cookieNoisetteChocolat,
@@ -527,7 +721,9 @@ const MENU_ITEMS: Item[] = [
   {
     id: "brownie-maison",
     name: "Brownie Maison",
+    nameEn: "House Brownie",
     description: "Brownie maison ultra fondant au chocolat noir intense.",
+    descriptionEn: "Ultra-melting house brownie with intense dark chocolate.",
     price: "3,50 €",
     category: "Desserts",
     imageUrl: brownieImg,
@@ -535,8 +731,10 @@ const MENU_ITEMS: Item[] = [
   },
   {
     id: "speculoos-cheesecake",
-    name: "Speculoos Cheesecake  ",
+    name: "Speculoos Cheesecake",
+    nameEn: "Speculoos Cheesecake",
     description: "Cheesecake maison crémeux sur lit de biscuit speculoos croustillant.",
+    descriptionEn: "Creamy house cheesecake on a crunchy speculoos biscuit base.",
     price: "4,50 €",
     category: "Desserts",
     imageUrl: cheesecakeImg,
@@ -545,7 +743,9 @@ const MENU_ITEMS: Item[] = [
   {
     id: "glace-2-boules",
     name: "Glace 2 Boules",
-    description: "Vanille, chocolat ou fraise.",
+    nameEn: "2-Scoop Ice Cream",
+    description: "Vanille · Chocolat · Fraise.",
+    descriptionEn: "Vanilla · Chocolate · Strawberry.",
     price: "3,50 €",
     category: "Desserts",
     imageUrl: glaceImg,
@@ -553,43 +753,15 @@ const MENU_ITEMS: Item[] = [
   },
 
   {
-    id: "option-menu",
-    name: "Option Menu",
-    description: "Frites Maison + Boisson 33cl.",
-    price: "+2,50 €",
-    category: "Box & Menus",
-    imageUrl: fritesMaisonImg,
+    id: "kids-combo",
+    name: "Le Kids Combo",
+    nameEn: "Kids Combo",
+    description: "Mini croustille ou 4 nuggets + Capri-Sun, frites maison.",
+    descriptionEn: "Mini Croustille or 4 nuggets + Capri-Sun and house fries.",
+    price: "6,90 €",
+    category: "Kids",
+    imageUrl: kidsComboImg,
     sortOrder: 90,
-  },
-  {
-    id: "box-a-solo-crazy",
-    name: "Box A · Solo Crazy",
-    description:
-      "1 Croustille au choix, 2 Tenders Croustillants, 1 Boisson 33cl et 1 Sauce au choix.",
-    price: "13,90 €",
-    category: "Box & Menus",
-    imageUrl: boxASoloCrazy,
-    sortOrder: 91,
-  },
-  {
-    id: "box-b-crazy-master",
-    name: "Box B · Crazy Master",
-    description:
-      "1 Croustille au choix, 3 Wings, 2 Tenders Croustillants, 1 Boisson 33cl et 2 Sauces offertes.",
-    price: "16,90 €",
-    category: "Box & Menus",
-    imageUrl: boxBCrazyMaster,
-    sortOrder: 92,
-  },
-  {
-    id: "box-c-crazy-duo",
-    name: "Box C · Crazy Duo",
-    description:
-      "2 Croustilles au choix, 6 Wings, 3 Onion Rings, 2 Boissons 33cl et 2 Sauces offertes.",
-    price: "29,90 €",
-    category: "Box & Menus",
-    imageUrl: boxCCrazyDuo,
-    sortOrder: 93,
   },
 ];
 
@@ -618,15 +790,16 @@ function getFilteredItems(category: Category) {
 export function Menu() {
   const [active, setActive] = useState<Category>(filterCategories[0]);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const filtered = getFilteredItems(active);
 
   const totalCents = savedItems.reduce((total, item) => total + item.priceCents * item.quantity, 0);
 
   function handleSaveItem(item: Item, selectedPrice?: PriceOption) {
+    const displayName = getMenuItemName(item, lang);
     const itemName = selectedPrice
-      ? `${item.name.trim()} (${formatOptionPieces(selectedPrice.label)})`
-      : item.name.trim();
+      ? `${displayName.trim()} (${formatOptionPieces(selectedPrice.label)})`
+      : displayName.trim();
     const priceLabel = selectedPrice ? selectedPrice.value.trim() : (item.price ?? "");
 
     const priceCents = priceToCents(priceLabel);
@@ -685,23 +858,27 @@ export function Menu() {
         </div>
 
         <div className="mx-auto mb-12 flex max-w-5xl flex-wrap justify-center gap-2 md:gap-3">
-          {filterCategories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              onClick={() => setActive(category)}
-              aria-pressed={active === category}
-              aria-label={category}
-              className={`inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-normal break-words transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
-                active === category
-                  ? "bg-primary text-primary-foreground shadow-glow"
-                  : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
-              }`}
-            >
-              <span aria-hidden="true">{CATEGORY_EMOJI[category]}</span>
-              <span>{category}</span>
-            </button>
-          ))}
+          {filterCategories.map((category) => {
+            const categoryLabel = t(CATEGORY_LABEL_KEY[category]);
+
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setActive(category)}
+                aria-pressed={active === category}
+                aria-label={categoryLabel}
+                className={`inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-normal break-words transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
+                  active === category
+                    ? "bg-primary text-primary-foreground shadow-glow"
+                    : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
+                }`}
+              >
+                <span aria-hidden="true">{CATEGORY_EMOJI[category]}</span>
+                <span>{categoryLabel}</span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid sm:grid-cols-2 gap-10">
@@ -709,6 +886,11 @@ export function Menu() {
             <MenuCard key={item.id} item={item} onSave={handleSaveItem} />
           ))}
         </div>
+
+        <p className="mx-auto mt-8 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground/70">
+          Ces images ont pour but de donner un aperçu des plats. Le plat commandé peut être
+          différent de l’image. Nous vous conseillons de lire les descriptions avant de commander.
+        </p>
       </div>
     </section>
   );
@@ -721,10 +903,15 @@ function MenuCard({
   onSave: (item: Item, selectedPrice?: PriceOption) => void;
 }) {
   const [priceOptionsOpen, setPriceOptionsOpen] = useState(false);
-  const { t } = useI18n();
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const { t, lang } = useI18n();
   const img = item.imageUrl;
   const priceOptions = item.prices ?? [];
   const hasPriceOptions = priceOptions.length > 0;
+  const displayName = getMenuItemName(item, lang);
+  const description = getMenuItemDescription(item, lang);
+  const isExpandableDescription =
+    item.category === "Riz Crousty" && (description?.length ?? 0) > 45;
 
   function handleAddClick() {
     if (hasPriceOptions) {
@@ -746,7 +933,7 @@ function MenuCard({
         {img ? (
           <img
             src={img}
-            alt={item.name}
+            alt={displayName}
             width={960}
             height={960}
             loading="lazy"
@@ -769,14 +956,16 @@ function MenuCard({
 
       <div className="relative p-6">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <h3 className="font-display text-xl leading-tight md:text-2xl">{item.name}</h3>
+          <h3 className="font-display text-xl leading-tight md:text-2xl">{displayName}</h3>
 
           <button
             type="button"
             onClick={handleAddClick}
             aria-expanded={hasPriceOptions ? priceOptionsOpen : undefined}
             aria-label={
-              hasPriceOptions ? `Choisir le format de ${item.name}` : `Ajouter ${item.name}`
+              hasPriceOptions
+                ? t("menu.chooseItemFormat").replace("{item}", displayName)
+                : t("menu.addItem").replace("{item}", displayName)
             }
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-black leading-none text-primary-foreground shadow-glow transition-transform active:scale-95"
           >
@@ -787,7 +976,7 @@ function MenuCard({
           {hasPriceOptions ? (
             <>
               <div className="inline-flex rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 font-sans text-sm font-extrabold leading-snug text-emerald-300">
-                Choisir un format
+                {t("menu.chooseFormat")}
               </div>
 
               {priceOptionsOpen && (
@@ -800,11 +989,15 @@ function MenuCard({
                         className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-card"
                       >
                         <span className="flex min-w-0 flex-col gap-1 font-sans text-sm font-bold text-foreground">
-                          <span className="text-xs uppercase text-muted-foreground">Quantité</span>
+                          <span className="text-xs uppercase text-muted-foreground">
+                            {t("menu.quantity")}
+                          </span>
                           <span>{price.label}</span>
                         </span>
                         <span className="flex shrink-0 flex-col gap-1 text-right font-sans text-sm font-extrabold text-emerald-300">
-                          <span className="text-xs uppercase text-muted-foreground">Prix</span>
+                          <span className="text-xs uppercase text-muted-foreground">
+                            {t("menu.price")}
+                          </span>
                           <span>{price.value.trim()}</span>
                         </span>
                       </button>
@@ -820,11 +1013,37 @@ function MenuCard({
           )}
         </div>
 
-        {item.description && (
-          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-            {item.description}
-          </p>
-        )}
+        {description &&
+          (isExpandableDescription ? (
+            <button
+              type="button"
+              onClick={() => setDescriptionOpen((open) => !open)}
+              aria-expanded={descriptionOpen}
+              aria-label={t(
+                descriptionOpen ? "menu.collapseDescription" : "menu.expandDescription",
+              ).replace("{item}", displayName)}
+              className="group w-full text-left text-sm leading-relaxed text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+              <span
+                className={`block overflow-hidden transition-[max-height] duration-300 ease-out ${
+                  descriptionOpen ? "max-h-48" : "max-h-[2.85rem] line-clamp-2"
+                }`}
+              >
+                {description}
+              </span>
+              <span className="mt-2 inline-flex items-center gap-1 font-sans text-xs font-extrabold text-sunset-pink">
+                {descriptionOpen ? t("menu.showLess") : t("menu.showMore")}
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`h-3.5 w-3.5 transition-transform ${
+                    descriptionOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </span>
+            </button>
+          ) : (
+            <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+          ))}
       </div>
     </article>
   );

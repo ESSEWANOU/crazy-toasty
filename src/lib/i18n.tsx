@@ -13,7 +13,15 @@ type TranslationNode = string | { [key: string]: TranslationNode };
 
 const translations: Record<Lang, Record<string, TranslationNode>> = {
   fr: {
-    nav: { concept: "Concept", menu: "Menu", where: "Où nous trouver" },
+    nav: {
+      concept: "Concept",
+      menu: "Menu",
+      where: "Où nous trouver",
+      french: "Français",
+      english: "English",
+      toggleMenu: "Ouvrir le menu",
+      closeMenu: "Fermer le menu",
+    },
     hero: {
       subtitle: "Le toasté le plus gourmand de la ville.",
       cta: "Voir la carte",
@@ -33,6 +41,33 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       title: "LE MENU QUI REND FOU",
       description: "",
       photoSoon: "Photo bientôt",
+      orderTitle: "Commande",
+      emptyOrder: "Veuillez sélectionner les plats à sauvegarder.",
+      quantity: "Quantité",
+      price: "Prix",
+      total: "Total",
+      remove: "Supprimer",
+      savedNote:
+        "Cette sélection vous aide à mémoriser vos choix avant de commander. L’envoi des commandes directement depuis le site n’est pas encore disponible.",
+      chooseFormat: "Choisir un format",
+      chooseItemFormat: "Choisir le format de {item}",
+      addItem: "Ajouter {item}",
+      collapseDescription: "Réduire la description de {item}",
+      expandDescription: "Afficher la description de {item}",
+      showMore: "Voir plus",
+      showLess: "Réduire",
+      categories: {
+        rizCrousty: "Riz Crousty",
+        sides: "Accompagnements",
+        salad: "Crousty Bowl Salade",
+        burgers: "Burgers",
+        wings: "Wings",
+        sauces: "Sauces",
+        box: "Box",
+        drinks: "Boissons",
+        desserts: "Desserts",
+        kids: "Kids",
+      },
     },
     footer: {
       navigation: "Navigation",
@@ -47,13 +82,32 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       title: "Retrouve-nous dans la ville rose",
       directions: "Itinéraire",
       directions_label: "🧭 Itinéraire",
+      storeCity: "Toulouse — Jean Jaurès",
+      storeAddress: "2 rue Paul Mériel, 31000 Toulouse (à 2 min du métro Jean Jaurès)",
     },
     scroll: {
       toTopAria: "Remonter en haut de la page",
     },
+    errors: {
+      notFoundTitle: "Page introuvable",
+      notFoundText: "La page que vous cherchez n’existe pas ou a été déplacée.",
+      goHome: "Retour à l’accueil",
+      loadTitle: "Cette page n’a pas chargé",
+      loadText:
+        "Un problème est survenu de notre côté. Vous pouvez réessayer ou revenir à l’accueil.",
+      tryAgain: "Réessayer",
+    },
   },
   en: {
-    nav: { concept: "Concept", menu: "Menu", where: "Where to find us" },
+    nav: {
+      concept: "Concept",
+      menu: "Menu",
+      where: "Where to find us",
+      french: "French",
+      english: "English",
+      toggleMenu: "Open menu",
+      closeMenu: "Close menu",
+    },
     hero: {
       subtitle: "The city's most indulgent toasted sandwich.",
       cta: "See the menu",
@@ -73,6 +127,33 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       title: "THE MENU THAT MAKES YOU CRAZY",
       description: "",
       photoSoon: "Photo coming soon",
+      orderTitle: "Order",
+      emptyOrder: "Select dishes to save them here.",
+      quantity: "Qty",
+      price: "Price",
+      total: "Total",
+      remove: "Remove",
+      savedNote:
+        "This selection helps you remember your choices before ordering. Sending orders directly from the website is not available yet.",
+      chooseFormat: "Choose a size",
+      chooseItemFormat: "Choose the size for {item}",
+      addItem: "Add {item}",
+      collapseDescription: "Collapse the description for {item}",
+      expandDescription: "Show the description for {item}",
+      showMore: "See more",
+      showLess: "Show less",
+      categories: {
+        rizCrousty: "Crousty Rice",
+        sides: "Sides",
+        salad: "Crousty Salad Bowl",
+        burgers: "Burgers",
+        wings: "Wings",
+        sauces: "Sauces",
+        box: "Boxes",
+        drinks: "Drinks",
+        desserts: "Desserts",
+        kids: "Kids",
+      },
     },
     footer: {
       navigation: "Navigation",
@@ -87,9 +168,19 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       title: "Find us in the pink city",
       directions: "Directions",
       directions_label: "🧭 Directions",
+      storeCity: "Toulouse — Jean Jaurès",
+      storeAddress: "2 rue Paul Mériel, 31000 Toulouse (2 min from Jean Jaurès metro)",
     },
     scroll: {
       toTopAria: "Scroll to top",
+    },
+    errors: {
+      notFoundTitle: "Page not found",
+      notFoundText: "The page you're looking for doesn't exist or has been moved.",
+      goHome: "Go home",
+      loadTitle: "This page didn't load",
+      loadText: "Something went wrong on our end. You can try again or head back home.",
+      tryAgain: "Try again",
     },
   },
 };
@@ -112,6 +203,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore localStorage errors.
     }
+
+    document.documentElement.lang = lang;
   }, [lang]);
 
   const t = (key: string) => {

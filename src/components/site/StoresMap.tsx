@@ -7,6 +7,7 @@ import { useI18n } from "@/lib/i18n";
 export interface StoreLocation {
   city: string;
   addr: string;
+  directionsQuery: string;
   lat: number;
   lng: number;
 }
@@ -68,7 +69,7 @@ export function StoresMap({ stores, activeIndex, onSelect }: Props) {
               <div style={{ fontWeight: 800, marginBottom: 4 }}>{s.city}</div>
               <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>{s.addr}</div>
               <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.addr + ", Toulouse")}`}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.directionsQuery)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
