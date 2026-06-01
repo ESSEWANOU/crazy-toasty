@@ -33,7 +33,7 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       p1_start: "Crazy Toasty, c'est avant tout ",
       p1_bold: "le Croustille Bowl",
       p1_end:
-        " : une base généreuse (riz parfumé ou frites maison), du poulet pané croustillant à mort, des toppings frais et nos sauces signature. Le tout dans un bowl, prêt à dévorer.",
+        " : une base généreuse (riz parfumé), du poulet pané croustillant à mort, des toppings frais et nos sauces signature. Le tout dans un bowl, prêt à dévorer.",
       p2: "Pas de surgelé. Pas de bullshit. Juste du vrai, créé ici, à Toulouse.",
     },
     menu: {
@@ -119,7 +119,7 @@ const translations: Record<Lang, Record<string, TranslationNode>> = {
       p1_start: "Crazy Toasty is above all ",
       p1_bold: "the Croustille Bowl",
       p1_end:
-        ": a generous base (fragrant rice or house fries), crispy breaded chicken, fresh toppings and our signature sauces. All in a bowl, ready to devour.",
+        ": a generous base (fragrant rice), crispy breaded chicken, fresh toppings and our signature sauces. All in a bowl, ready to devour.",
       p2: "No frozen food. No bullshit. Just real food, made here in Toulouse.",
     },
     menu: {
