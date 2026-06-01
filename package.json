@@ -7,9 +7,10 @@
     "dev": "vite --configLoader native dev",
     "build": "vite build --configLoader native",
     "build:dev": "vite build --mode development --configLoader native",
-    "preview": "vite preview",
+    "preview": "npm run build && wrangler dev",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
@@ -42,6 +43,7 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "wrangler": "^4.95.0"
   }
 }
