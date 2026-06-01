@@ -428,7 +428,7 @@ const MENU_ITEMS: Item[] = [
     prices: [
       { id: "x6", label: "×6", value: "7,90 €" },
       { id: "x10", label: "×10", value: "11,90 €" },
-      { id: "bucket-x16", label: "Bucket ×16", value: "17,90 €" },
+      { id: "x16", label: "×16", value: "17,90 €" },
     ],
     category: "Wings",
     imageUrl: wingsNatureNew,
@@ -443,7 +443,7 @@ const MENU_ITEMS: Item[] = [
     prices: [
       { id: "x6", label: "×6", value: "8,50 €" },
       { id: "x10", label: "×10", value: "12,90 €" },
-      { id: "bucket-x16", label: "Bucket ×16", value: "18,90 €" },
+      { id: "x16", label: "×16", value: "18,90 €" },
     ],
     category: "Wings",
     imageUrl: wingsFirestorm,
@@ -458,7 +458,7 @@ const MENU_ITEMS: Item[] = [
     prices: [
       { id: "x6", label: "×6", value: "8,50 €" },
       { id: "x10", label: "×10", value: "12,90 €" },
-      { id: "bucket-x16", label: "Bucket ×16", value: "18,90 €" },
+      { id: "x16", label: "×16", value: "18,90 €" },
     ],
     category: "Wings",
     imageUrl: wingsSmokyBbq,
