@@ -126,10 +126,10 @@ function ContactPage() {
                   <div>
                     <p className="font-semibold">Email</p>
                     <a
-                      href="mailto:contact@crazytoasty.fr"
+                      href="mailto:blackpearltoulouse@gmail.com"
                       className="text-muted-foreground hover:text-primary transition-colors"
                     >
-                      contact@crazytoasty.fr
+                      blackpearltoulouse@gmail.com
                     </a>
                   </div>
                 </div>

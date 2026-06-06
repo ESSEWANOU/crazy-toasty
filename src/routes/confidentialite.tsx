@@ -3,7 +3,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { useI18n } from "@/lib/i18n";
 
-const CONTACT_EMAIL = "contact@crazytoasty.fr";
+const CONTACT_EMAIL = "blackpearltoulouse@gmail.com";
 
 type Section = {
   title: string;
