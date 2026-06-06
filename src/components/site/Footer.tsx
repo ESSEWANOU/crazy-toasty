@@ -39,6 +39,16 @@ export function Footer() {
                   {t("nav.menu")}
                 </a>
               </li>
+              <li>
+                <Link to="/contact" className="hover:text-primary transition-colors">
+                  {t("nav.contact")}
+                </Link>
+              </li>
+              <li>
+                <Link to="/recrutement" className="hover:text-primary transition-colors">
+                  {t("nav.recrut")}
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

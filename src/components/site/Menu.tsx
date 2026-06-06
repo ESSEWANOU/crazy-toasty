@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n";
 import bowlOg from "@/assets/bowl-og.webp";
 import bowlSpicy from "@/assets/bowl-spicy.webp";
@@ -82,10 +83,12 @@ function SavedOrderPanel({
   items,
   totalCents,
   onRemoveItem,
+  onCommander,
 }: {
   items: SavedItem[];
   totalCents: number;
   onRemoveItem: (id: string) => void;
+  onCommander: () => void;
 }) {
   const { t } = useI18n();
 
@@ -133,6 +136,21 @@ function SavedOrderPanel({
             </li>
           ))}
         </ul>
+      )}
+
+      {items.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <button
+            type="button"
+            disabled
+            className="w-full rounded-full bg-primary/40 py-3 text-sm font-bold text-primary-foreground/50 cursor-not-allowed"
+          >
+            {t("menu.commander")}
+          </button>
+          <p className="text-center text-xs text-amber-400/80">
+            Les commandes en ligne sont temporairement bloquées
+          </p>
+        </div>
       )}
 
       <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground/70">
@@ -791,6 +809,7 @@ export function Menu() {
   const [active, setActive] = useState<Category>(filterCategories[0]);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const { t, lang } = useI18n();
+  const navigate = useNavigate();
   const filtered = getFilteredItems(active);
 
   const totalCents = savedItems.reduce((total, item) => total + item.priceCents * item.quantity, 0);
@@ -836,6 +855,11 @@ export function Menu() {
     );
   }
 
+  function handleCommander() {
+    localStorage.setItem("crazy-toasty-cart", JSON.stringify(savedItems));
+    navigate({ to: "/commander" });
+  }
+
   return (
     <section id="menu" className="relative bg-card/30 py-16 md:py-24 content-auto">
       <div className="container mx-auto px-4">
@@ -844,6 +868,7 @@ export function Menu() {
             items={savedItems}
             totalCents={totalCents}
             onRemoveItem={handleRemoveItem}
+            onCommander={handleCommander}
           />
         </div>
 

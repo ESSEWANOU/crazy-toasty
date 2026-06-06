@@ -3,122 +3,259 @@ import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { useI18n } from "@/lib/i18n";
 
-const CONTACT_EMAIL = "blackpearltoulouse@gmail.com";
+const CONTACT_EMAIL = "contact@crazytoasty.fr";
 
-const PRIVACY_CONTENT = {
+type Section = {
+  title: string;
+  paragraphs?: string[];
+  items?: string[];
+  emailPrefix?: string;
+  footerParagraphs?: string[];
+};
+
+const PRIVACY_CONTENT: Record<
+  "fr" | "en",
+  { title: string; updated: string; intro: string; sections: Section[] }
+> = {
   fr: {
     title: "Politique de confidentialité",
+    updated: "Dernière mise à jour : juin 2025",
+    intro:
+      "La présente politique décrit la façon dont MEXICANFOOD31 (Crazy Toasty) collecte, utilise et protège vos données personnelles lorsque vous utilisez le site crazytoasty.fr.",
     sections: [
       {
-        title: "Responsable du traitement",
+        title: "1. Responsable du traitement",
         paragraphs: [
-          "Le responsable du traitement des données personnelles est MEXICANFOOD31, société à responsabilité limitée, immatriculée sous le SIREN 900 453 648.",
+          "MEXICANFOOD31 — SARL au capital de 1 000 €, SIREN 900 453 648",
           "Siège social : 2 rue Paul Mériel, 31000 Toulouse, France",
-          "Le site est exploité sous l’enseigne commerciale Crazy Toasty.",
         ],
         emailPrefix: "Contact :",
       },
       {
-        title: "Données personnelles",
+        title: "2. Données collectées et finalités",
         paragraphs: [
-          "Le site Crazy Toasty ne collecte pas de données personnelles via un formulaire, un compte client ou un système de commande en ligne.",
-          "Aucune donnée nominative, adresse email, numéro de téléphone ou adresse de livraison n’est demandée ni enregistrée sur le site.",
+          "Nous collectons uniquement les données que vous nous transmettez volontairement via les formulaires du site :",
+          "Formulaire de contact (page /contact) :",
+        ],
+        items: [
+          "Nom et prénom, adresse email, téléphone (optionnel), sujet, message",
+          "Finalité : répondre à votre demande et vous recontacter",
+          "Base légale : consentement (soumission volontaire du formulaire)",
+          "Conservation : 1 an à compter de la réception, puis suppression",
         ],
       },
       {
-        title: "Utilisation des données",
-        paragraphs: [
-          "Puisque le site ne collecte pas de données personnelles, aucune donnée personnelle n’est utilisée à des fins commerciales, de suivi, de prospection ou de commande.",
+        title: "",
+        paragraphs: ["Formulaire de candidature (page /recrutement) :"],
+        items: [
+          "Nom et prénom, adresse email, téléphone, poste souhaité, lettre de motivation, CV (fichier PDF, optionnel)",
+          "Finalité : traitement de votre candidature et prise de contact",
+          "Base légale : consentement (soumission volontaire du formulaire)",
+          "Conservation : 2 ans à compter du dépôt de candidature, conformément à la réglementation",
         ],
       },
       {
-        title: "Durée de conservation",
-        paragraphs: [
-          "Aucune donnée personnelle n’étant collectée par le site, aucune durée de conservation de données personnelles n’est applicable.",
+        title: "",
+        paragraphs: ["Formulaire de commande (page /commander, temporairement désactivé) :"],
+        items: [
+          "Nom et prénom, numéro de téléphone, détail de la commande, notes éventuelles",
+          "Finalité : traitement et préparation de la commande de restauration",
+          "Base légale : exécution d'un contrat",
+          "Conservation : 3 ans à compter de la commande (obligations comptables)",
         ],
       },
       {
-        title: "Destinataires des données",
+        title: "3. Paiements en ligne",
         paragraphs: [
-          "Aucune donnée personnelle collectée par le site n’est transmise à MEXICANFOOD31, à des prestataires ou à des tiers.",
-          "Les données personnelles ne sont ni vendues, ni louées, ni partagées à des fins commerciales.",
+          "Lorsque le paiement en ligne est activé, les transactions sont traitées par Stripe, Inc. Crazy Toasty ne stocke jamais les données bancaires (numéro de carte, cryptogramme). Ces données transitent directement sur les serveurs sécurisés de Stripe, certifiés PCI-DSS.",
+          "Pour en savoir plus : stripe.com/fr/privacy",
         ],
       },
       {
-        title: "Cookies et stockage local",
+        title: "4. Sous-traitants et destinataires",
         paragraphs: [
-          "Le site utilise uniquement le stockage local du navigateur pour mémoriser la langue choisie par l’utilisateur.",
-          "Aucun cookie publicitaire, traceur marketing ou outil d’analyse publicitaire n’est utilisé.",
+          "Vos données peuvent être transmises aux sous-traitants suivants, dans le strict cadre de l'exécution de leur service :",
+        ],
+        items: [
+          "Supabase, Inc. — hébergement de la base de données (data center : Paris, France, UE)",
+          "Resend, Inc. — envoi d'emails transactionnels (confirmation, notifications)",
+          "Stripe, Inc. — traitement des paiements en ligne (lorsqu'activé)",
+          "Cloudflare, Inc. — hébergement du site web",
+        ],
+        footerParagraphs: [
+          "Aucune donnée n'est vendue, louée ou partagée à des fins commerciales.",
         ],
       },
       {
-        title: "Droits des utilisateurs",
+        title: "5. Transferts hors Union européenne",
         paragraphs: [
-          "Le site ne collectant pas de données personnelles, aucune demande d’accès, de rectification ou de suppression de données collectées via le site n’est en principe nécessaire.",
-          "Pour toute question concernant la confidentialité ou le fonctionnement du site, vous pouvez nous contacter.",
+          "Supabase héberge les données en France (UE). Resend utilise un data center en Irlande (UE). Stripe et Cloudflare sont basés aux États-Unis ; des mécanismes de transfert appropriés (clauses contractuelles types) sont en place conformément au RGPD.",
         ],
-        emailPrefix: "Contact :",
-        footerParagraphs: ["Vous pouvez également introduire une réclamation auprès de la CNIL."],
+      },
+      {
+        title: "6. Stockage local (localStorage)",
+        paragraphs: [
+          "Le site utilise le stockage local du navigateur (localStorage) pour les éléments suivants :",
+        ],
+        items: [
+          "Langue sélectionnée (fr/en) — non transmise à des tiers",
+          "Panier en cours (articles sélectionnés) — non transmis à des tiers, effacé après validation de commande",
+        ],
+        footerParagraphs: [
+          "Aucun cookie publicitaire, traceur marketing ou outil d'analyse publicitaire tiers n'est utilisé.",
+        ],
+      },
+      {
+        title: "7. Sécurité",
+        paragraphs: [
+          "Les données sont stockées dans une base de données Supabase protégée par Row Level Security (RLS). Les connexions sont chiffrées via TLS. L'accès au tableau de bord de gestion est protégé par authentification.",
+        ],
+      },
+      {
+        title: "8. Vos droits",
+        paragraphs: [
+          "Conformément au RGPD (Règlement UE 2016/679) et à la loi Informatique et Libertés, vous disposez des droits suivants :",
+        ],
+        items: [
+          "Droit d'accès : obtenir une copie des données vous concernant",
+          "Droit de rectification : corriger des données inexactes",
+          "Droit à l'effacement : demander la suppression de vos données",
+          "Droit à la portabilité : recevoir vos données dans un format structuré",
+          "Droit d'opposition : vous opposer à un traitement",
+          "Droit de retirer votre consentement à tout moment",
+        ],
+        emailPrefix: "Pour exercer ces droits, contactez-nous :",
+        footerParagraphs: [
+          "Vous pouvez également introduire une réclamation auprès de la CNIL : cnil.fr",
+        ],
+      },
+      {
+        title: "9. Modifications",
+        paragraphs: [
+          "Nous nous réservons le droit de modifier cette politique à tout moment. La date de dernière mise à jour figure en haut de page. En continuant à utiliser le site après modification, vous acceptez la politique mise à jour.",
+        ],
       },
     ],
   },
   en: {
     title: "Privacy Policy",
+    updated: "Last updated: June 2025",
+    intro:
+      "This policy describes how MEXICANFOOD31 (Crazy Toasty) collects, uses, and protects your personal data when you use the crazytoasty.fr website.",
     sections: [
       {
-        title: "Data Controller",
+        title: "1. Data Controller",
         paragraphs: [
-          "The controller of personal data processing is MEXICANFOOD31, a limited liability company registered under SIREN 900 453 648.",
+          "MEXICANFOOD31 — Limited liability company, share capital €1,000, SIREN 900 453 648",
           "Registered office: 2 rue Paul Mériel, 31000 Toulouse, France",
-          "The website is operated under the Crazy Toasty trade name.",
         ],
         emailPrefix: "Contact:",
       },
       {
-        title: "Personal Data",
+        title: "2. Data Collected and Purposes",
         paragraphs: [
-          "The Crazy Toasty website does not collect personal data through a form, customer account, or online ordering system.",
-          "No nominative data, email address, phone number, or delivery address is requested or stored on the website.",
+          "We only collect data you voluntarily submit through the website's forms:",
+          "Contact form (/contact page):",
+        ],
+        items: [
+          "First and last name, email address, phone (optional), subject, message",
+          "Purpose: responding to your request and following up",
+          "Legal basis: consent (voluntary form submission)",
+          "Retention: 1 year from receipt, then deletion",
         ],
       },
       {
-        title: "Use of Data",
-        paragraphs: [
-          "Because the website does not collect personal data, no personal data is used for commercial, tracking, marketing, or ordering purposes.",
+        title: "",
+        paragraphs: ["Job application form (/recrutement page):"],
+        items: [
+          "First and last name, email address, phone number, desired position, cover letter, CV (PDF file, optional)",
+          "Purpose: processing your application and getting in touch",
+          "Legal basis: consent (voluntary form submission)",
+          "Retention: 2 years from application date, as required by regulations",
         ],
       },
       {
-        title: "Retention Period",
-        paragraphs: [
-          "Since no personal data is collected by the website, no personal data retention period applies.",
+        title: "",
+        paragraphs: ["Order form (/commander page, temporarily disabled):"],
+        items: [
+          "First and last name, phone number, order details, optional notes",
+          "Purpose: processing and preparing the restaurant order",
+          "Legal basis: performance of a contract",
+          "Retention: 3 years from the order date (accounting obligations)",
         ],
       },
       {
-        title: "Data Recipients",
+        title: "3. Online Payments",
         paragraphs: [
-          "No personal data collected by the website is transmitted to MEXICANFOOD31, service providers, or third parties.",
-          "Personal data is not sold, rented, or shared for commercial purposes.",
+          "When online payment is enabled, transactions are processed by Stripe, Inc. Crazy Toasty never stores banking data (card number, security code). This data is transmitted directly to Stripe's PCI-DSS certified secure servers.",
+          "Learn more at: stripe.com/privacy",
         ],
       },
       {
-        title: "Cookies and Local Storage",
+        title: "4. Sub-processors and Recipients",
         paragraphs: [
-          "The website only uses browser local storage to remember the user's selected language.",
-          "No advertising cookies, marketing trackers, or advertising analytics tools are used.",
+          "Your data may be shared with the following sub-processors, strictly for the purpose of providing their service:",
+        ],
+        items: [
+          "Supabase, Inc. — database hosting (data center: Paris, France, EU)",
+          "Resend, Inc. — transactional email delivery (confirmations, notifications)",
+          "Stripe, Inc. — online payment processing (when enabled)",
+          "Cloudflare, Inc. — website hosting",
+        ],
+        footerParagraphs: ["No data is sold, rented, or shared for commercial purposes."],
+      },
+      {
+        title: "5. International Transfers",
+        paragraphs: [
+          "Supabase hosts data in France (EU). Resend uses a data center in Ireland (EU). Stripe and Cloudflare are based in the United States; appropriate transfer mechanisms (standard contractual clauses) are in place in compliance with the GDPR.",
         ],
       },
       {
-        title: "User Rights",
+        title: "6. Local Storage",
         paragraphs: [
-          "Because the website does not collect personal data, requests to access, rectify, or delete data collected through the website are generally not necessary.",
-          "For any question about privacy or how the website works, you can contact us.",
+          "The website uses browser local storage (localStorage) for the following:",
         ],
-        emailPrefix: "Contact:",
-        footerParagraphs: ["You may also file a complaint with the CNIL."],
+        items: [
+          "Selected language (fr/en) — not shared with third parties",
+          "Current cart (selected items) — not shared with third parties, cleared after order completion",
+        ],
+        footerParagraphs: [
+          "No advertising cookies, marketing trackers, or third-party analytics tools are used.",
+        ],
+      },
+      {
+        title: "7. Security",
+        paragraphs: [
+          "Data is stored in a Supabase database protected by Row Level Security (RLS). Connections are encrypted via TLS. Access to the management dashboard is protected by authentication.",
+        ],
+      },
+      {
+        title: "8. Your Rights",
+        paragraphs: [
+          "Under the GDPR (EU Regulation 2016/679), you have the following rights:",
+        ],
+        items: [
+          "Right of access: obtain a copy of data held about you",
+          "Right to rectification: correct inaccurate data",
+          "Right to erasure: request deletion of your data",
+          "Right to data portability: receive your data in a structured format",
+          "Right to object: object to processing",
+          "Right to withdraw consent at any time",
+        ],
+        emailPrefix: "To exercise these rights, contact us:",
+        footerParagraphs: [
+          "You may also lodge a complaint with the CNIL (French data protection authority): cnil.fr",
+        ],
+      },
+      {
+        title: "9. Changes",
+        paragraphs: [
+          "We reserve the right to update this policy at any time. The date of the last update is shown at the top of the page. By continuing to use the site after an update, you accept the revised policy.",
+        ],
       },
     ],
   },
-} as const;
+};
 
 export const Route = createFileRoute("/confidentialite")({
   component: ConfidentialitePage,
@@ -133,32 +270,46 @@ function ConfidentialitePage() {
       <Navbar compact />
 
       <section className="container mx-auto px-4 py-20 max-w-4xl">
-        <h1 className="font-display text-4xl md:text-5xl mb-8">{content.title}</h1>
+        <p className="mb-2 font-display text-sm tracking-[0.3em] text-sunset-pink uppercase">
+          {lang === "fr" ? "Vos données" : "Your data"}
+        </p>
+        <h1 className="font-display text-4xl md:text-5xl mb-3">{content.title}</h1>
+        <p className="text-xs text-muted-foreground mb-4">{content.updated}</p>
+        <p className="text-sm text-muted-foreground mb-10 border-l-2 border-primary/40 pl-4">
+          {content.intro}
+        </p>
 
         <div className="space-y-8 text-muted-foreground leading-relaxed">
-          {content.sections.map((section) => (
-            <div key={section.title}>
-              <h2 className="text-2xl font-semibold text-foreground mb-3">{section.title}</h2>
-              {section.paragraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-              {"items" in section && (
-                <ul className="list-disc pl-6 mt-3 space-y-2">
-                  {section.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+          {content.sections.map((section, i) => (
+            <div key={i} className={section.title ? "border-t border-border/40 pt-8" : "pt-2"}>
+              {section.title && (
+                <h2 className="text-xl font-semibold text-foreground mb-4">{section.title}</h2>
               )}
-              {"emailPrefix" in section && (
-                <p>
-                  {section.emailPrefix}{" "}
-                  <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">
-                    {CONTACT_EMAIL}
-                  </a>
-                </p>
-              )}
-              {"footerParagraphs" in section &&
-                section.footerParagraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+              <div className="space-y-2">
+                {section.paragraphs?.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+                {section.items && (
+                  <ul className="list-disc pl-6 space-y-1 mt-2">
+                    {section.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+                {section.emailPrefix && (
+                  <p>
+                    {section.emailPrefix}{" "}
+                    <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">
+                      {CONTACT_EMAIL}
+                    </a>
+                  </p>
+                )}
+                {section.footerParagraphs?.map((paragraph) => (
+                  <p key={paragraph} className="mt-2">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
             </div>
           ))}
         </div>

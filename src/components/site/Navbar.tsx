@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo.webp";
 import { useI18n } from "@/lib/i18n";
 
@@ -16,16 +17,8 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
       : "h-[7.5rem] md:h-[11.25rem]";
   const sectionHref = (id: string) => `${compact ? "/" : ""}#${id}`;
 
-  const links = [
-    { href: sectionHref("concept"), label: t("nav.concept") },
-    { href: sectionHref("menu"), label: t("nav.menu") },
-  ];
-
-  const mobileLinks = [
-    { href: sectionHref("menu"), label: t("nav.menu") },
-    { href: sectionHref("concept"), label: t("nav.concept") },
-    { href: sectionHref("adresses"), label: t("nav.where") },
-  ];
+  const navLinkCls =
+    "px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-white/5";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -45,17 +38,14 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between px-5 py-3 relative">
-          {/* Left: nav */}
+          {/* Left: Concept + Recrutement */}
           <nav className="hidden md:flex items-center gap-1">
-            {links.slice(0, 1).map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-white/5"
-              >
-                {l.label}
-              </a>
-            ))}
+            <a href={sectionHref("concept")} className={navLinkCls}>
+              {t("nav.concept")}
+            </a>
+            <Link to="/recrutement" className={navLinkCls}>
+              {t("nav.recrut")}
+            </Link>
           </nav>
 
           {/* Mobile left spacer */}
@@ -79,17 +69,14 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
             />
           </motion.a>
 
-          {/* Right: nav */}
+          {/* Right: Menu + Contact + FR/EN */}
           <div className="hidden md:flex items-center gap-1">
-            {links.slice(1).map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-white/5"
-              >
-                {l.label}
-              </a>
-            ))}
+            <a href={sectionHref("menu")} className={navLinkCls}>
+              {t("nav.menu")}
+            </a>
+            <Link to="/contact" className={navLinkCls}>
+              {t("nav.contact")}
+            </Link>
 
             <div className="flex items-center gap-2 ml-3">
               <button
@@ -129,16 +116,41 @@ export function Navbar({ compact = false }: { compact?: boolean } = {}) {
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-2"
           >
-            {mobileLinks.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="px-4 py-3 rounded-lg hover:bg-white/5"
-              >
-                {l.label}
-              </a>
-            ))}
+            <a
+              href={sectionHref("menu")}
+              onClick={() => setOpen(false)}
+              className="px-4 py-3 rounded-lg hover:bg-white/5"
+            >
+              {t("nav.menu")}
+            </a>
+            <a
+              href={sectionHref("concept")}
+              onClick={() => setOpen(false)}
+              className="px-4 py-3 rounded-lg hover:bg-white/5"
+            >
+              {t("nav.concept")}
+            </a>
+            <a
+              href={sectionHref("adresses")}
+              onClick={() => setOpen(false)}
+              className="px-4 py-3 rounded-lg hover:bg-white/5"
+            >
+              {t("nav.where")}
+            </a>
+            <Link
+              to="/contact"
+              onClick={() => setOpen(false)}
+              className="px-4 py-3 rounded-lg hover:bg-white/5"
+            >
+              {t("nav.contact")}
+            </Link>
+            <Link
+              to="/recrutement"
+              onClick={() => setOpen(false)}
+              className="px-4 py-3 rounded-lg hover:bg-white/5"
+            >
+              {t("nav.recrut")}
+            </Link>
 
             <div className="mt-2 flex gap-2">
               <button
