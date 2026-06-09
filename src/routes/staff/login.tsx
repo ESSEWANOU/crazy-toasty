@@ -17,7 +17,7 @@ function StaffLoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate({ to: "/staff/" });
+      navigate({ to: "/staff" });
     }
   }, [user, loading, navigate]);
 
@@ -34,7 +34,7 @@ function StaffLoginPage() {
       return;
     }
 
-    navigate({ to: "/staff/" });
+    navigate({ to: "/staff" });
   }
 
   if (loading) return null;
