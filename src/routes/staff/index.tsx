@@ -2,6 +2,8 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
+  useMemo,
   createContext,
   useContext,
   type CSSProperties,
@@ -15,9 +17,18 @@ import {
   Palette, KeyRound, Package, LayoutDashboard, Euro, ShoppingBag,
   SlidersHorizontal, Percent, CalendarDays, Clock, FileText, Mail,
   Building2, Bike, Gamepad2,
+  Bell, Search, Timer, Phone, Check, Trash2, AlertTriangle, Volume2,
+  Pencil, Briefcase, Loader2, ArrowRight, Send,
+  Play, Square, UserCircle, TrendingUp,
+  Plus, Flame, Star, Image as ImageIcon,
+  Save, MapPin,
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
+import { format, startOfWeek, endOfWeek, addDays, differenceInMinutes, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 import { supabase } from "@/lib/supabase";
 import type { Order, OrderItem, OrderStatus } from "@/lib/supabase";
+import { LOCAL_IMAGES as PRODUCT_LOCAL_IMAGES } from "@/lib/product-images";
 import { useAuth } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from "sonner";
@@ -70,6 +81,31 @@ type Contact = {
   subject: string;
   message: string;
   status: "unread" | "read" | "replied";
+};
+
+type TimeEntry = {
+  id: string;
+  user_id: string;
+  clock_in: string;
+  clock_out: string | null;
+  notes: string | null;
+  entry_date: string;
+};
+
+type StaffMember = {
+  id: string;
+  created_at: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  phone: string | null;
+  role: "admin" | "manager" | "equipe" | "livreur";
+  contract_type: string | null;
+  weekly_hours: number | null;
+  hire_date: string | null;
+  is_active: boolean;
+  notes: string | null;
+  user_id?: string | null;
 };
 
 interface NavItem {
@@ -324,20 +360,20 @@ function StaffPageInner() {
     // ── Cuisine ──
     { value: "kitchen",          label: "Commandes",          icon: ChefHat,          category: "cuisine", badge: pendingOrders },
     { value: "orders",           label: "Historique",         icon: History,          category: "cuisine" },
-    { value: "timetracking",     label: "Pointage",           icon: Clock,            category: "cuisine", disabled: true, disabledLabel: "Bientôt" },
+    { value: "timetracking",     label: "Pointage",           icon: Clock,            category: "cuisine" },
     // ── Gestion ──
     { value: "messages",         label: "Messages",           icon: MessageSquare,    category: "gestion", adminOnly: true, badge: newMessages },
     { value: "applications",     label: "Candidatures",       icon: Users,            category: "gestion", adminOnly: true, badge: newApplications },
     { value: "dashboard",        label: "Dashboard",          icon: LayoutDashboard,  category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "sales",            label: "Ventes",             icon: Euro,             category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
-    { value: "products",         label: "Produits & Tarifs",  icon: ShoppingBag,      category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
+    { value: "products",         label: "Produits & Tarifs",  icon: ShoppingBag,      category: "gestion", adminOnly: true },
     { value: "options",          label: "Options produits",   icon: SlidersHorizontal,category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "promotions",       label: "Promos",             icon: Percent,          category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "invoices",         label: "Factures",           icon: FileText,         category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "planning",         label: "Planning",           icon: CalendarDays,     category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "pointage-history", label: "Historique pointage",icon: Clock,            category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "inventory",        label: "Inventaire",         icon: Package,          category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
-    { value: "users",            label: "Équipe",             icon: Users,            category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
+    { value: "users",            label: "Équipe",             icon: Users,            category: "gestion", adminOnly: true },
     { value: "delivery",         label: "Livraisons",         icon: Bike,             category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "email",            label: "Campagnes email",    icon: Mail,             category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "settings-restaurants", label: "Restaurant",    icon: Building2,        category: "gestion", adminOnly: true },
@@ -495,6 +531,9 @@ function StaffPageInner() {
       case "applications":  return isAdminUnlocked ? <ApplicationsView onRead={fetchBadges} /> : null;
       case "settings-restaurants": return isAdminUnlocked ? <RestaurantPage /> : null;
       case "settings-password":    return isAdminUnlocked ? <PasswordPage /> : null;
+      case "timetracking":  return <TimetrackingView onGoToTeam={() => setActiveTab("users")} />;
+      case "users":         return isAdminUnlocked ? <TeamView /> : null;
+      case "products":      return isAdminUnlocked ? <ProductsView /> : null;
       case "theme":         return <ThemePage currentTheme={currentTheme} setCurrentTheme={setCurrentTheme} />;
       case "game":          return <GamePage />;
       default:              return null;
@@ -978,35 +1017,339 @@ function PasswordPage() {
 
 // ─── Restaurant Page ──────────────────────────────────────────────────────────
 
+type RestaurantSettings = {
+  id: string;
+  is_open: boolean;
+  opening_time: string;
+  closing_time: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  click_collect_enabled: boolean;
+  delivery_enabled: boolean;
+  delivery_max_km: number;
+  delivery_base_fee: number;
+  delivery_fee_per_km: number;
+  delivery_min_order: number;
+};
+
 function RestaurantPage() {
-  return (
-    <div className="max-w-2xl space-y-4">
-      <div className="rounded-2xl border border-border/50 bg-card/50 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Building2 size={18} className="text-primary" />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>Crazy Toasty</p>
-            <p className="text-xs text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>Restaurant</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          {[
-            { label: "Email de contact", value: "blackpearltoulouse@gmail.com" },
-            { label: "Type", value: "Food truck / Snack" },
-            { label: "Statut", value: "En activité" },
-          ].map(({ label, value }) => (
-            <div key={label}>
-              <p className="text-xs text-muted-foreground mb-0.5" style={{ fontFamily: "var(--font-sans)" }}>{label}</p>
-              <p className="text-foreground font-medium" style={{ fontFamily: "var(--font-sans)" }}>{value}</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-5 text-xs text-muted-foreground/60 border-t border-border/40 pt-4" style={{ fontFamily: "var(--font-sans)" }}>
-          La configuration avancée du restaurant sera disponible prochainement.
-        </p>
+  const [settings, setSettings] = useState<RestaurantSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [editTab, setEditTab] = useState<"info" | "delivery">("info");
+  const [saving, setSaving] = useState(false);
+  const [ccLoading, setCcLoading] = useState(false);
+  const [deliveryLoading, setDeliveryLoading] = useState(false);
+
+  // edit form fields
+  const [openingTime, setOpeningTime] = useState("11:00");
+  const [closingTime, setClosingTime] = useState("22:00");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [notes, setNotes] = useState("");
+  const [deliveryMaxKm, setDeliveryMaxKm] = useState(5);
+  const [deliveryBaseFee, setDeliveryBaseFee] = useState(2.5);
+  const [deliveryFeePerKm, setDeliveryFeePerKm] = useState(0.5);
+  const [deliveryMinOrder, setDeliveryMinOrder] = useState(15);
+
+  useEffect(() => {
+    supabase
+      .from("restaurant_settings")
+      .select("*")
+      .limit(1)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          const d = data as RestaurantSettings;
+          setSettings(d);
+          setOpeningTime(d.opening_time.substring(0, 5));
+          setClosingTime(d.closing_time.substring(0, 5));
+          setAddress(d.address ?? "");
+          setPhone(d.phone ?? "");
+          setEmail(d.email ?? "");
+          setNotes(d.notes ?? "");
+          setDeliveryMaxKm(d.delivery_max_km);
+          setDeliveryBaseFee(d.delivery_base_fee);
+          setDeliveryFeePerKm(d.delivery_fee_per_km);
+          setDeliveryMinOrder(d.delivery_min_order);
+        }
+        setLoading(false);
+      });
+  }, []);
+
+  async function toggleCC(value: boolean) {
+    if (!settings) return;
+    setCcLoading(true);
+    setSettings((s) => (s ? { ...s, click_collect_enabled: value } : s));
+    const { error } = await supabase
+      .from("restaurant_settings")
+      .update({ click_collect_enabled: value })
+      .eq("id", settings.id);
+    setCcLoading(false);
+    if (error) {
+      toast.error("Erreur lors de la mise à jour");
+      setSettings((s) => (s ? { ...s, click_collect_enabled: !value } : s));
+    } else {
+      toast.success(value ? "Click & Collect ouvert" : "Click & Collect fermé");
+    }
+  }
+
+  async function toggleDelivery(value: boolean) {
+    if (!settings) return;
+    setDeliveryLoading(true);
+    setSettings((s) => (s ? { ...s, delivery_enabled: value } : s));
+    const { error } = await supabase
+      .from("restaurant_settings")
+      .update({ delivery_enabled: value })
+      .eq("id", settings.id);
+    setDeliveryLoading(false);
+    if (error) {
+      toast.error("Erreur lors de la mise à jour");
+      setSettings((s) => (s ? { ...s, delivery_enabled: !value } : s));
+    } else {
+      toast.success(value ? "Livraison activée" : "Livraison désactivée");
+    }
+  }
+
+  async function saveInfo() {
+    if (!settings) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("restaurant_settings")
+      .update({
+        opening_time: openingTime,
+        closing_time: closingTime,
+        address: address || null,
+        phone: phone || null,
+        email: email || null,
+        notes: notes || null,
+      })
+      .eq("id", settings.id);
+    if (!error) {
+      setSettings((s) => s ? {
+        ...s, opening_time: openingTime, closing_time: closingTime,
+        address: address || null, phone: phone || null,
+        email: email || null, notes: notes || null,
+      } : s);
+      toast.success("Informations sauvegardées");
+    } else {
+      toast.error("Erreur lors de la sauvegarde");
+    }
+    setSaving(false);
+  }
+
+  async function saveDelivery() {
+    if (!settings) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("restaurant_settings")
+      .update({
+        delivery_max_km: deliveryMaxKm,
+        delivery_base_fee: deliveryBaseFee,
+        delivery_fee_per_km: deliveryFeePerKm,
+        delivery_min_order: deliveryMinOrder,
+      })
+      .eq("id", settings.id);
+    if (!error) {
+      setSettings((s) => s ? {
+        ...s, delivery_max_km: deliveryMaxKm, delivery_base_fee: deliveryBaseFee,
+        delivery_fee_per_km: deliveryFeePerKm, delivery_min_order: deliveryMinOrder,
+      } : s);
+      toast.success("Paramètres livraison sauvegardés");
+    } else {
+      toast.error("Erreur lors de la sauvegarde");
+    }
+    setSaving(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 size={24} className="animate-spin text-muted-foreground" />
       </div>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <div className="max-w-2xl">
+        <div className="rounded-2xl border border-border/50 bg-card/50 p-8 text-center space-y-2">
+          <Building2 size={32} className="text-muted-foreground/40 mx-auto" />
+          <p className="font-medium text-foreground">Table non configurée</p>
+          <p className="text-xs text-muted-foreground">
+            Exécutez le SQL <code className="bg-muted px-1 py-0.5 rounded text-[11px]">restaurant_settings</code> dans Supabase puis rechargez.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const lbl = "block text-xs font-medium text-muted-foreground mb-1.5";
+  const inp = "w-full rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/50";
+  const Toggle = ({ on, onClick, loading: tLoading }: { on: boolean; onClick: () => void; loading: boolean }) =>
+    tLoading
+      ? <Loader2 size={16} className="animate-spin text-muted-foreground" />
+      : <button type="button" onClick={onClick}
+          className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${on ? "bg-green-500" : "bg-muted-foreground/30"}`}>
+          <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${on ? "translate-x-5" : ""}`} />
+        </button>;
+
+  return (
+    <div className="max-w-2xl space-y-5">
+
+      {/* ── Header ────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-border/50 bg-card/50 p-5">
+        <p className="text-lg font-bold text-foreground">🏪 Paramètres du Restaurant</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Configurez les informations et les services</p>
+      </div>
+
+      {/* ── Restaurant card ───────────────────────────────────── */}
+      <div className={`rounded-2xl border bg-card/50 transition-all ${editing ? "ring-2 ring-primary border-primary/40" : "border-border/50 hover:border-primary/40"}`}>
+
+        {/* Card header — click to edit */}
+        <button type="button" className="w-full text-left px-5 pt-5 pb-3"
+          onClick={() => { setEditing((v) => !v); setEditTab("info"); }}>
+          <div className="flex items-center gap-2">
+            <MapPin size={15} className="text-primary shrink-0" />
+            <span className="font-semibold text-foreground">Crazy Toasty</span>
+          </div>
+          <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+            {settings.address && (
+              <p className="flex items-center gap-1.5"><MapPin size={11} className="shrink-0" />{settings.address}</p>
+            )}
+            {settings.phone && (
+              <p className="flex items-center gap-1.5"><Phone size={11} className="shrink-0" />{settings.phone}</p>
+            )}
+            <p className="flex items-center gap-1.5">
+              <Clock size={11} className="shrink-0" />
+              {settings.opening_time.substring(0, 5)} — {settings.closing_time.substring(0, 5)}
+            </p>
+          </div>
+        </button>
+
+        {/* Service toggles */}
+        <div className="px-5 pb-5 pt-2 border-t border-border/40 mt-1 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShoppingBag size={15} className={settings.click_collect_enabled ? "text-green-500" : "text-muted-foreground"} />
+              <div>
+                <p className="text-sm font-medium text-foreground">Click &amp; Collect</p>
+                <p className="text-xs text-muted-foreground">{settings.click_collect_enabled ? "Ouvert" : "Fermé"}</p>
+              </div>
+            </div>
+            <Toggle on={settings.click_collect_enabled} onClick={() => toggleCC(!settings.click_collect_enabled)} loading={ccLoading} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bike size={15} className={settings.delivery_enabled ? "text-green-500" : "text-muted-foreground"} />
+              <div>
+                <p className="text-sm font-medium text-foreground">Livraison</p>
+                <p className="text-xs text-muted-foreground">{settings.delivery_enabled ? "Activée" : "Désactivée"}</p>
+              </div>
+            </div>
+            <Toggle on={settings.delivery_enabled} onClick={() => toggleDelivery(!settings.delivery_enabled)} loading={deliveryLoading} />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Edit panel (expanded on click) ────────────────────── */}
+      {editing && (
+        <div className="rounded-2xl border border-border/50 bg-card/50 overflow-hidden">
+          {/* Tab bar */}
+          <div className="flex border-b border-border/50">
+            {(["info", "delivery"] as const).map((tab) => (
+              <button key={tab} type="button" onClick={() => setEditTab(tab)}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${editTab === tab ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                {tab === "info" ? <><MapPin size={13} />Informations</> : <><Bike size={13} />Livraison</>}
+              </button>
+            ))}
+          </div>
+
+          <div className="p-5 space-y-4">
+            {editTab === "info" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>Heure d'ouverture</label>
+                    <input type="time" value={openingTime} onChange={e => setOpeningTime(e.target.value)} className={inp} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Heure de fermeture</label>
+                    <input type="time" value={closingTime} onChange={e => setClosingTime(e.target.value)} className={inp} />
+                  </div>
+                </div>
+                <div>
+                  <label className={lbl}>Adresse</label>
+                  <input type="text" value={address} onChange={e => setAddress(e.target.value)}
+                    placeholder="Ex: 12 rue de la Paix, 75001 Paris" className={inp} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbl}>Téléphone</label>
+                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="06 XX XX XX XX" className={inp} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Email</label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="contact@crazytoasty.fr" className={inp} />
+                  </div>
+                </div>
+                <div>
+                  <label className={lbl}>Notes</label>
+                  <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
+                    placeholder="Informations supplémentaires…" className={`${inp} resize-none`} />
+                </div>
+                <button type="button" onClick={saveInfo} disabled={saving}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2.5 hover:opacity-90 transition-opacity disabled:opacity-60">
+                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  {saving ? "Enregistrement…" : "Enregistrer"}
+                </button>
+              </>
+            )}
+
+            {editTab === "delivery" && (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className={lbl}>Rayon max (km)</label>
+                    <input type="number" step="0.5" min="1" max="30" value={deliveryMaxKm}
+                      onChange={e => setDeliveryMaxKm(parseFloat(e.target.value) || 5)} className={inp} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Frais de base (€)</label>
+                    <input type="number" step="0.5" min="0" value={deliveryBaseFee}
+                      onChange={e => setDeliveryBaseFee(parseFloat(e.target.value) || 0)} className={inp} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Frais par km (€)</label>
+                    <input type="number" step="0.1" min="0" value={deliveryFeePerKm}
+                      onChange={e => setDeliveryFeePerKm(parseFloat(e.target.value) || 0)} className={inp} />
+                  </div>
+                </div>
+                <div className="max-w-[180px]">
+                  <label className={lbl}>Commande minimum (€)</label>
+                  <input type="number" step="1" min="0" value={deliveryMinOrder}
+                    onChange={e => setDeliveryMinOrder(parseFloat(e.target.value) || 0)} className={inp} />
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Exemple :</span> livraison à 3 km →{" "}
+                  {deliveryBaseFee.toFixed(2)}€ + (3 × {deliveryFeePerKm.toFixed(2)}€) ={" "}
+                  <span className="font-semibold text-primary">{(deliveryBaseFee + 3 * deliveryFeePerKm).toFixed(2)}€</span>
+                </div>
+                <button type="button" onClick={saveDelivery} disabled={saving}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2.5 hover:opacity-90 transition-opacity disabled:opacity-60">
+                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  {saving ? "Enregistrement…" : "Enregistrer"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -1091,122 +1434,647 @@ function GamePage() {
   );
 }
 
+// ─── Forced Order Notification ───────────────────────────────────────────────
+
+function ForcedOrderNotification({
+  orderCount,
+  firstOrder,
+  onValidate,
+  onStartPreparing,
+}: {
+  orderCount: number;
+  firstOrder: Order | null;
+  onValidate: () => void;
+  onStartPreparing: (id: string) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+      <div className="mx-4 w-full max-w-lg rounded-3xl border-4 border-yellow-500 bg-card p-6 shadow-2xl shadow-yellow-500/30">
+        <div className="mb-4 flex justify-center">
+          <div className="animate-bounce rounded-full bg-yellow-500 p-4">
+            <Bell className="h-10 w-10 text-white" />
+          </div>
+        </div>
+        <h2 className="mb-1 text-center text-3xl font-bold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+          🔔 NOUVELLE COMMANDE !
+        </h2>
+        <p className="mb-4 text-center text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+          {orderCount} commande{orderCount > 1 ? "s" : ""} à traiter
+        </p>
+        {firstOrder && (
+          <div className="mb-4 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-4">
+            <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{firstOrder.customer_name}</p>
+            <a href={`tel:${firstOrder.customer_phone}`} className="flex items-center gap-1 text-muted-foreground hover:text-primary" style={{ fontFamily: "var(--font-sans)" }}>
+              <Phone className="h-4 w-4" /> {firstOrder.customer_phone}
+            </a>
+            <div className="mt-3 space-y-1.5">
+              {(firstOrder.items as OrderItem[]).map(item => (
+                <div key={item.id} className="flex items-center gap-2 text-sm">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">{item.quantity}</span>
+                  <span className="font-semibold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{item.name}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-right text-2xl font-bold text-primary" style={{ fontFamily: "var(--font-sans)" }}>{formatEuro(firstOrder.total_cents)}</p>
+          </div>
+        )}
+        <div className="grid gap-2">
+          {firstOrder && (
+            <button
+              onClick={() => { onStartPreparing(firstOrder.id); onValidate(); }}
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 text-lg font-bold text-white transition hover:bg-orange-600 active:scale-[0.98]"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <ChefHat className="h-6 w-6" /> Commencer la préparation
+            </button>
+          )}
+          <button
+            onClick={onValidate}
+            className="flex h-12 w-full items-center justify-center rounded-xl border border-border bg-muted/40 text-base font-semibold text-foreground transition hover:bg-muted/60"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            Vu !
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Kitchen View ─────────────────────────────────────────────────────────────
 
 function KitchenView({ onCountChange }: { onCountChange: () => void }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [kitchenTab, setKitchenTab] = useState<"commandes" | "historique">("commandes");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "preparing" | "ready">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [newOrderAlert, setNewOrderAlert] = useState<{ count: number; orderIds: string[] } | null>(null);
+  const [isAudioReady, setIsAudioReady] = useState(false);
+  const hasInitialized = useRef(false);
+  const prevOrderIds = useRef<Set<string>>(new Set());
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const initAudio = useCallback(async () => {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      if (audioCtxRef.current.state === "suspended") {
+        await audioCtxRef.current.resume();
+      }
+      setIsAudioReady(true);
+      return true;
+    } catch { return false; }
+  }, []);
+
+  // Warm up audio on first user interaction
+  useEffect(() => {
+    const warmup = () => { initAudio(); };
+    document.addEventListener("click", warmup, { once: true });
+    document.addEventListener("touchstart", warmup, { once: true });
+    return () => {
+      document.removeEventListener("click", warmup);
+      document.removeEventListener("touchstart", warmup);
+    };
+  }, [initAudio]);
+
+  const playNewOrderSound = useCallback(async () => {
+    try {
+      await initAudio();
+      const ctx = audioCtxRef.current!;
+      const tone = (freq: number, t: number, dur: number) => {
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0, ctx.currentTime + t);
+        g.gain.linearRampToValueAtTime(0.5, ctx.currentTime + t + 0.02);
+        g.gain.linearRampToValueAtTime(0, ctx.currentTime + t + dur);
+        osc.start(ctx.currentTime + t); osc.stop(ctx.currentTime + t + dur + 0.1);
+      };
+      tone(880, 0, 0.2); tone(1100, 0.25, 0.2); tone(880, 0.5, 0.3);
+    } catch {}
+  }, [initAudio]);
+
+  const testSound = async () => {
+    const ok = await initAudio();
+    if (ok) {
+      await playNewOrderSound();
+      toast.success("🔔 Test sonore joué");
+    } else {
+      toast.error("Cliquez d'abord quelque part pour activer le son");
+    }
+  };
 
   const loadOrders = useCallback(async () => {
     const { data } = await supabase
       .from("orders")
       .select("*")
-      .in("status", ["pending", "preparing", "ready"])
-      .order("created_at", { ascending: true });
-    if (data) setOrders(data as Order[]);
+      .in("status", ["pending", "preparing", "ready", "completed"])
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (data) {
+      const all = data as Order[];
+      const activeIds = new Set(all.filter(o => o.status !== "completed").map(o => o.id));
+      if (hasInitialized.current) {
+        const newOnes = [...activeIds].filter(id => !prevOrderIds.current.has(id));
+        if (newOnes.length > 0) {
+          playNewOrderSound();
+          setNewOrderAlert({ count: newOnes.length, orderIds: newOnes });
+          toast.success(`🔔 ${newOnes.length} nouvelle${newOnes.length > 1 ? "s" : ""} commande${newOnes.length > 1 ? "s" : ""} !`);
+        }
+      } else {
+        hasInitialized.current = true;
+      }
+      prevOrderIds.current = activeIds;
+      setOrders(all);
+    }
     setLoading(false);
-  }, []);
+    onCountChange();
+  }, [onCountChange, playNewOrderSound]);
 
   useEffect(() => {
     loadOrders();
     const ch = supabase
-      .channel("ct-kitchen")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => { loadOrders(); onCountChange(); })
+      .channel("ct-kitchen-v3")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, loadOrders)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, loadOrders)
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "orders" }, loadOrders)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [loadOrders, onCountChange]);
+  }, [loadOrders]);
 
-  async function setStatus(id: string, status: OrderStatus) {
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) toast.error("Erreur lors de la mise à jour.");
-    else loadOrders();
-  }
+  // 20s polling fallback when tab visible
+  useEffect(() => {
+    let iv: number | null = null;
+    const start = () => { if (iv != null) return; iv = window.setInterval(() => { if (document.visibilityState === "visible") loadOrders(); }, 20000); };
+    const stop = () => { if (iv != null) { window.clearInterval(iv); iv = null; } };
+    const h = () => (document.visibilityState === "visible" ? (loadOrders(), start()) : stop());
+    h();
+    document.addEventListener("visibilitychange", h);
+    return () => { document.removeEventListener("visibilitychange", h); stop(); };
+  }, [loadOrders]);
 
-  const pending  = orders.filter((o) => o.status === "pending");
-  const preparing = orders.filter((o) => o.status === "preparing");
-  const ready    = orders.filter((o) => o.status === "ready");
+  const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
+    const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
+    if (error) { toast.error("Impossible de mettre à jour."); return; }
+    const statusLabels: Partial<Record<OrderStatus, string>> = {
+      preparing: "En cuisine ✓",
+      ready:     "Client alerté ✓",
+      completed: "Récupérée ✓",
+    };
+    if (statusLabels[newStatus]) toast.success(`${statusLabels[newStatus]} — #${orderId.slice(0, 6)}`);
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    onCountChange();
 
-  if (loading) return <Spinner />;
+    if (newStatus === "ready" || newStatus === "completed") {
+      const order = orders.find(o => o.id === orderId);
+      if (order?.customer_email) {
+        supabase.functions.invoke("send-status-email", {
+          body: {
+            order_id: orderId,
+            customer_email: order.customer_email,
+            customer_name: order.customer_name,
+            status: newStatus,
+          },
+        }).catch(() => {});
+      }
+    }
+  };
 
-  if (orders.length === 0) {
+  const archiveCompletedOrders = () => {
+    const n = orders.filter(o => o.status === "completed").length;
+    if (n === 0) { toast.info("Pas de commandes terminées"); return; }
+    setOrders(prev => prev.filter(o => o.status !== "completed"));
+    toast.success(`✓ Service terminé — ${n} commande${n > 1 ? "s" : ""} archivée${n > 1 ? "s" : ""}`);
+  };
+
+  const activeOrders = orders.filter(o => ["pending", "preparing", "ready"].includes(o.status));
+  const historyOrders = orders.filter(o => o.status === "completed");
+  const pendingCount = activeOrders.filter(o => o.status === "pending").length;
+  const preparingCount = activeOrders.filter(o => o.status === "preparing").length;
+  const readyForPickupCount = activeOrders.filter(o => o.status === "ready").length;
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const matchesSearch = (o: Order) =>
+    !normalizedSearch ||
+    [o.customer_name, o.customer_phone, o.id].join(" ").toLowerCase().includes(normalizedSearch);
+
+  const filteredActive = activeOrders
+    .filter(o => statusFilter === "all" || o.status === statusFilter)
+    .filter(matchesSearch)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  const filteredHistory = historyOrders.filter(matchesSearch).slice(0, 20);
+  const firstPendingOrder = activeOrders.find(o => o.status === "pending") ?? null;
+
+  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <ChefHat size={48} className="mb-4 text-muted-foreground/30" />
-        <p className="text-lg font-semibold text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>Aucune commande active</p>
-        <p className="mt-1 text-sm text-muted-foreground/60" style={{ fontFamily: "var(--font-sans)" }}>Les nouvelles commandes apparaîtront ici en temps réel.</p>
+      <div className="flex items-center justify-center py-20">
+        <RefreshCw className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="grid gap-5 md:grid-cols-3">
-      <KitchenColumn title="En attente"    color="yellow" orders={pending}   onSetStatus={setStatus} />
-      <KitchenColumn title="En préparation" color="blue"   orders={preparing} onSetStatus={setStatus} />
-      <KitchenColumn title="Prêt à servir" color="green"  orders={ready}     onSetStatus={setStatus} />
+    <div className="space-y-4">
+      {/* ── Forced fullscreen notification ── */}
+      {newOrderAlert && (
+        <ForcedOrderNotification
+          orderCount={newOrderAlert.count}
+          firstOrder={firstPendingOrder}
+          onValidate={() => setNewOrderAlert(null)}
+          onStartPreparing={(id) => updateOrderStatus(id, "preparing")}
+        />
+      )}
+
+      {/* ── Sticky control bar ── */}
+      <div className="sticky top-0 z-20 rounded-xl border border-border bg-card/95 p-3 shadow-sm backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {pendingCount > 0 && (
+              <span className="animate-pulse rounded-full bg-destructive px-3 py-1 text-sm font-bold text-destructive-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+                {pendingCount} à traiter
+              </span>
+            )}
+            <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+              <button
+                onClick={() => setKitchenTab("commandes")}
+                className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-all ${kitchenTab === "commandes" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`}
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                <Bell className="h-4 w-4" />
+                <span className="hidden sm:inline">Commandes</span>
+                <span className={`ml-0.5 rounded-full px-1.5 text-xs font-bold ${kitchenTab === "commandes" ? "bg-white/20 text-white" : "bg-muted-foreground/20 text-muted-foreground"}`}>
+                  {activeOrders.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setKitchenTab("historique")}
+                className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-all ${kitchenTab === "historique" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`}
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">Historique</span>
+                <span className={`ml-0.5 rounded-full px-1.5 text-xs font-bold ${kitchenTab === "historique" ? "bg-white/20 text-white" : "bg-muted-foreground/20 text-muted-foreground"}`}>
+                  {historyOrders.length}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Status filters */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setStatusFilter("all")}
+                className={`h-8 rounded-lg px-3 text-sm transition-all ${statusFilter === "all" ? "bg-primary text-primary-foreground ring-2 ring-blue-400" : "text-muted-foreground hover:bg-muted/40"}`}
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                <strong className="mr-1">{activeOrders.length}</strong>Tous
+              </button>
+              <button
+                onClick={() => setStatusFilter("pending")}
+                className={`flex h-8 items-center gap-1 rounded-lg px-3 text-sm transition-all ${statusFilter === "pending" ? "bg-primary text-primary-foreground ring-2 ring-blue-400" : "text-muted-foreground hover:bg-muted/40"}`}
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                <span className="inline-block h-2 w-2 rounded-full bg-red-400" />
+                <strong className="mx-1">{pendingCount}</strong>Nouvelle
+              </button>
+              <button
+                onClick={() => setStatusFilter("preparing")}
+                className={`flex h-8 items-center gap-1 rounded-lg px-3 text-sm transition-all ${statusFilter === "preparing" ? "bg-primary text-primary-foreground ring-2 ring-blue-400" : "text-muted-foreground hover:bg-muted/40"}`}
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                <span className="inline-block h-2 w-2 rounded-full bg-orange-400" />
+                <strong className="mx-1">{preparingCount}</strong>En préparation
+              </button>
+              <button
+                onClick={() => setStatusFilter("ready")}
+                className={`flex h-8 items-center gap-1 rounded-lg px-3 text-sm transition-all ${statusFilter === "ready" ? "bg-primary text-primary-foreground ring-2 ring-blue-400" : "text-muted-foreground hover:bg-muted/40"}`}
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
+                <strong className="mx-1">{readyForPickupCount}</strong>Prêtes
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Rechercher client ou commande"
+                className="h-8 w-56 rounded-lg border border-border bg-background pl-8 pr-3 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40"
+                style={{ fontFamily: "var(--font-sans)" }}
+              />
+            </div>
+
+            {/* Audio status */}
+            <div
+              className={`flex h-8 items-center gap-1 rounded-lg px-2 text-xs ${isAudioReady ? "bg-green-500/15 text-green-600" : "bg-yellow-500/15 text-yellow-600"}`}
+              title={isAudioReady ? "Son actif" : "Cliquez pour activer le son"}
+            >
+              <Volume2 className="h-3.5 w-3.5" />
+            </div>
+
+            {/* Test sound */}
+            <button
+              onClick={testSound}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all hover:bg-muted/50 hover:text-foreground"
+              title="Tester le son"
+            >
+              <Volume2 className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Refresh */}
+            <button
+              onClick={loadOrders}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all hover:bg-muted/50 hover:text-foreground"
+              title="Actualiser"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Archive */}
+            {historyOrders.length > 0 && kitchenTab === "historique" && (
+              <button
+                onClick={archiveCompletedOrders}
+                className="flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 text-xs font-semibold text-destructive transition-all hover:bg-destructive/20"
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Archiver</span> ({historyOrders.length})
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Commandes tab ── */}
+      {kitchenTab === "commandes" && (
+        filteredActive.length === 0 ? (
+          <div className="rounded-2xl border border-border bg-card py-20 text-center">
+            <Bell className="mx-auto mb-4 h-20 w-20 text-muted-foreground" />
+            <h2 className="mb-2 text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>Aucune commande</h2>
+            <p className="text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+              {searchQuery.trim() ? "Aucune commande ne correspond à votre recherche." : "Les commandes actives apparaîtront ici."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filteredActive.map(order => (
+              <KitchenOrderCard
+                key={order.id}
+                order={order}
+                onPrepare={() => updateOrderStatus(order.id, "preparing")}
+                onReady={() => updateOrderStatus(order.id, "ready")}
+                onComplete={() => updateOrderStatus(order.id, "completed")}
+              />
+            ))}
+          </div>
+        )
+      )}
+
+      {/* ── Historique tab ── */}
+      {kitchenTab === "historique" && (
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="border-b border-border bg-muted px-4 py-3">
+            <h3 className="text-lg font-bold" style={{ fontFamily: "var(--font-sans)" }}>Commandes terminées</h3>
+          </div>
+          {filteredHistory.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+              Aucune commande terminée
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {filteredHistory.map(order => (
+                <div key={order.id} className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono text-muted-foreground">#{order.id.slice(0, 6)}</span>
+                    <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{order.customer_name}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+                      {(order.items as OrderItem[]).length} article{(order.items as OrderItem[]).length > 1 ? "s" : ""}
+                    </span>
+                    <span className="text-2xl font-bold text-primary" style={{ fontFamily: "var(--font-sans)" }}>
+                      {formatEuro(order.total_cents)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function KitchenColumn({ title, color, orders, onSetStatus }: {
-  title: string; color: "yellow" | "blue" | "green";
-  orders: Order[]; onSetStatus: (id: string, status: OrderStatus) => void;
+function KitchenOrderCard({
+  order, onPrepare, onReady, onComplete,
+}: {
+  order: Order;
+  onPrepare: () => void;
+  onReady: () => void;
+  onComplete: () => void;
 }) {
-  const borderColor = { yellow: "border-yellow-500/30", blue: "border-blue-500/30", green: "border-emerald-500/30" }[color];
-  const headerColor = { yellow: "text-yellow-400", blue: "text-blue-400", green: "text-emerald-400" }[color];
-  return (
-    <div className={`rounded-2xl border ${borderColor} bg-card/40 p-4`}>
-      <div className={`mb-4 flex items-center justify-between ${headerColor}`} style={{ fontFamily: "var(--font-sans)", fontWeight: 700, fontSize: "0.9rem" }}>
-        <span>{title}</span>
-        {orders.length > 0 && <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold text-foreground/70">{orders.length}</span>}
-      </div>
-      {orders.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground/50" style={{ fontFamily: "var(--font-sans)" }}>Vide</p>
-      ) : (
-        <div className="space-y-3">
-          {orders.map((order) => <KitchenCard key={order.id} order={order} onSetStatus={onSetStatus} />)}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function KitchenCard({ order, onSetStatus }: { order: Order; onSetStatus: (id: string, status: OrderStatus) => void }) {
+  const [elapsed, setElapsed] = useState(0);
+  const [hasAlerted, setHasAlerted] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const status = order.status as OrderStatus;
+
+  const playOverdueAlert = useCallback(() => {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume();
+      const beep = (freq: number, t: number, dur: number) => {
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + t);
+        g.gain.setValueAtTime(0, ctx.currentTime + t);
+        g.gain.linearRampToValueAtTime(0.4, ctx.currentTime + t + 0.02);
+        g.gain.setValueAtTime(0.4, ctx.currentTime + t + dur - 0.05);
+        g.gain.linearRampToValueAtTime(0, ctx.currentTime + t + dur);
+        osc.start(ctx.currentTime + t); osc.stop(ctx.currentTime + t + dur);
+      };
+      beep(600, 0, 0.2); beep(400, 0.25, 0.3);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    const orderDate = new Date(order.created_at);
+    const tick = () => {
+      const s = Math.floor((Date.now() - orderDate.getTime()) / 1000);
+      setElapsed(s);
+      if (s >= 900 && !hasAlerted && ["pending", "preparing"].includes(status)) {
+        playOverdueAlert();
+        setHasAlerted(true);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [order.created_at, status, hasAlerted, playOverdueAlert]);
+
+  const fmtElapsed = (s: number): string => {
+    const m = Math.floor(s / 60), secs = s % 60;
+    if (m >= 60) { const h = Math.floor(m / 60); return `${h}h${String(m % 60).padStart(2, "0")}`; }
+    return `${m}:${String(secs).padStart(2, "0")}`;
+  };
+
+  const isPending = status === "pending";
+  const isOverdue = elapsed >= 900 && ["pending", "preparing"].includes(status);
+
+  const timerColor =
+    status === "completed" || status === "ready" ? "text-green-500"
+    : elapsed < 300 ? "text-green-500"
+    : elapsed < 600 ? "text-yellow-500"
+    : elapsed < 900 ? "text-orange-500"
+    : "text-red-500";
+
+  const cardClass = ({
+    pending:   "border-yellow-500 bg-yellow-500/10",
+    preparing: "border-orange-500 bg-orange-500/10",
+    ready:     "border-green-500 bg-green-500/10",
+    completed: "border-muted bg-muted/50",
+    cancelled: "border-muted bg-muted/50",
+  } as Record<string, string>)[status] ?? "border-border";
+
+  const statusInfo = ({
+    pending:   { label: "NOUVELLE",       Icon: Clock,    color: "text-yellow-500" },
+    preparing: { label: "EN PRÉPARATION", Icon: ChefHat,  color: "text-orange-500" },
+    ready:     { label: "PRÊTE",          Icon: Package,  color: "text-green-500"  },
+    completed: { label: "RÉCUPÉRÉE",      Icon: Check,    color: "text-muted-foreground" },
+    cancelled: { label: "ANNULÉE",        Icon: XCircle,  color: "text-muted-foreground" },
+  } as Record<string, { label: string; Icon: React.ElementType; color: string }>)[status]
+    ?? { label: status.toUpperCase(), Icon: Clock, color: "text-muted-foreground" };
+
+  const statusFullText: Record<string, string> = {
+    pending:   "Nouvelle commande",
+    preparing: "Commande en cours de préparation",
+    ready:     "Commande prête",
+    completed: "Commande récupérée",
+    cancelled: "Commande annulée",
+  };
+
+  const { Icon: StatusIcon } = statusInfo;
+  const itemCount = (order.items as OrderItem[]).length;
+
   return (
-    <div className="rounded-xl border border-border/50 bg-background/60 p-4">
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div>
-          <p className="font-semibold text-foreground leading-snug" style={{ fontFamily: "var(--font-sans)" }}>{order.customer_name}</p>
-          <p className="text-xs text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>{fmtTime(order.created_at)}</p>
+    <div className={`overflow-hidden rounded-2xl border-4 transition-all ${cardClass} ${isPending ? "shadow-2xl shadow-yellow-500/30" : ""} ${isOverdue ? "ring-4 ring-red-500 ring-opacity-50" : ""}`}>
+      {/* Header */}
+      <div className={`flex items-center justify-between px-4 py-3 ${isPending ? "bg-yellow-500" : isOverdue ? "bg-red-500" : "bg-card"}`}>
+        <div className={`flex items-center gap-2 font-bold text-lg ${isPending || isOverdue ? "text-white" : statusInfo.color}`} style={{ fontFamily: "var(--font-sans)" }}>
+          {isOverdue ? <AlertTriangle className="h-6 w-6" /> : <StatusIcon className="h-6 w-6" />}
+          {isOverdue ? "EN RETARD" : statusInfo.label}
         </div>
-        <span className="font-mono text-xs text-muted-foreground/60">#{order.id.split("-")[0].toUpperCase()}</span>
+        <div className={`flex items-center gap-1.5 font-mono text-lg font-bold ${isPending || isOverdue ? "text-white" : timerColor}`}>
+          <Timer className="h-5 w-5" /> {fmtElapsed(elapsed)}
+        </div>
+        <span className={`font-mono text-lg ${isPending || isOverdue ? "text-white/80" : "text-muted-foreground"}`}>
+          #{order.id.slice(0, 6).toUpperCase()}
+        </span>
       </div>
-      <ul className="mb-3 space-y-1 text-sm" style={{ fontFamily: "var(--font-sans)" }}>
-        {(order.items as OrderItem[]).map((item) => (
-          <li key={item.id} className="flex gap-1.5">
-            <span className="text-muted-foreground/60">×{item.quantity}</span>
-            <span className="text-foreground/90">{item.name}</span>
-          </li>
-        ))}
-      </ul>
-      {order.notes && (
-        <p className="mb-3 rounded-lg border border-border/40 bg-background/50 px-3 py-1.5 text-xs text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
-          💬 {order.notes}
-        </p>
-      )}
-      <div className="flex gap-2">
-        {status === "pending" && (
-          <>
-            <button onClick={() => onSetStatus(order.id, "preparing")} className="flex-1 rounded-lg border border-blue-500/30 bg-blue-500/15 py-1.5 text-xs font-bold text-blue-400 transition hover:bg-blue-500/25" style={{ fontFamily: "var(--font-sans)" }}>→ Préparer</button>
-            <button onClick={() => onSetStatus(order.id, "cancelled")} className="rounded-lg border border-destructive/30 bg-destructive/10 px-2.5 py-1.5 text-xs font-bold text-destructive transition hover:bg-destructive/20">✕</button>
-          </>
+
+      {/* Body */}
+      <div className="space-y-4 bg-card p-4">
+        {/* Client */}
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{order.customer_name}</p>
+            <a href={`tel:${order.customer_phone}`} className="flex items-center gap-1 text-muted-foreground hover:text-primary" style={{ fontFamily: "var(--font-sans)" }}>
+              <Phone className="h-4 w-4" /> {order.customer_phone}
+            </a>
+            <p className="mt-1 text-sm text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+              Statut : {statusFullText[status] ?? statusFullText.pending}
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="inline-block rounded-lg border border-border px-3 py-1 font-mono text-base">
+              {fmtTime(order.created_at)}
+            </span>
+            <p className="mt-1 text-sm text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+              {itemCount} article{itemCount > 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
+
+        {/* Items */}
+        <div className="rounded-xl bg-muted/50 p-4 space-y-4">
+          {(order.items as OrderItem[]).length > 0 ? (
+            (order.items as OrderItem[]).map(item => (
+              <div key={item.id} className="flex items-start gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-xl text-primary-foreground">
+                  {item.quantity}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-lg text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{item.name}</p>
+                  <p className="mt-1 text-sm text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+                    {item.priceLabel} × {item.quantity} = <span className="font-semibold text-foreground">{formatEuro(item.priceCents * item.quantity)}</span>
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="py-4 text-center text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>Aucun article</p>
+          )}
+        </div>
+
+        {/* Notes */}
+        {order.notes && (
+          <div className="rounded-r-lg border-l-4 border-primary bg-primary/10 p-3">
+            <p className="text-sm font-medium text-primary" style={{ fontFamily: "var(--font-sans)" }}>📝 Note client :</p>
+            <p className="text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{order.notes}</p>
+          </div>
         )}
-        {status === "preparing" && (
-          <button onClick={() => onSetStatus(order.id, "ready")} className="flex-1 rounded-lg border border-emerald-500/30 bg-emerald-500/15 py-1.5 text-xs font-bold text-emerald-400 transition hover:bg-emerald-500/25" style={{ fontFamily: "var(--font-sans)" }}>✓ Prêt à servir</button>
-        )}
-        {status === "ready" && (
-          <button onClick={() => onSetStatus(order.id, "completed")} className="flex-1 rounded-lg border border-border/40 bg-muted/30 py-1.5 text-xs font-bold text-muted-foreground transition hover:bg-muted/60" style={{ fontFamily: "var(--font-sans)" }}>✓ Récupérée</button>
-        )}
+
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-border pt-2">
+          <p className="text-sm text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+            Reçue à {fmtTime(order.created_at)}
+          </p>
+          <p className="text-2xl font-bold text-primary" style={{ fontFamily: "var(--font-sans)" }}>
+            {formatEuro(order.total_cents)}
+          </p>
+        </div>
+
+        {/* Action buttons */}
+        <div className="grid gap-3 pt-2">
+          {isPending && (
+            <button
+              onClick={onPrepare}
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 text-lg font-bold text-white transition hover:bg-orange-600"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <ChefHat className="h-6 w-6" /> Commencer la préparation
+            </button>
+          )}
+          {status === "preparing" && (
+            <button
+              onClick={onReady}
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-xl bg-green-500 text-lg font-bold text-white transition hover:bg-green-600"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <Package className="h-6 w-6" /> Commande prête
+            </button>
+          )}
+          {status === "ready" && (
+            <button
+              onClick={onComplete}
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-xl bg-primary text-lg font-bold text-primary-foreground transition hover:opacity-90"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <Check className="h-6 w-6" /> Commande récupérée
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1459,6 +2327,1542 @@ function MessagesView({ onRead }: { onRead: () => void }) {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+// ─── Timetracking View (Pointage Tablette) ───────────────────────────────────
+
+type TabletEntry = {
+  id: string;
+  employee_id: string;
+  clock_in: string;
+  clock_out: string | null;
+  status: string | null;
+};
+
+type TabletLastAction = {
+  employee: StaffMember;
+  action: "clock_in" | "clock_out";
+  weekHours: number;
+  weeklyTarget: number;
+  at: Date;
+};
+
+function TimetrackingView({ onGoToTeam: _ }: { onGoToTeam?: () => void }) {
+  const [now, setNow] = useState(new Date());
+  const [todayEntries, setTodayEntries] = useState<TabletEntry[]>([]);
+  const [weekEntries, setWeekEntries] = useState<TabletEntry[]>([]);
+  const [allStaff, setAllStaff] = useState<StaffMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastAction, setLastAction] = useState<TabletLastAction | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<StaffMember[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<StaffMember | null>(null);
+  const [pin, setPin] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinError, setPinError] = useState(false);
+  const [clockStatus, setClockStatus] = useState<"loading" | "in" | "out" | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Live clock
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Auto-clear last action after 8s
+  useEffect(() => {
+    if (!lastAction) return;
+    const id = setTimeout(() => setLastAction(null), 8000);
+    return () => clearTimeout(id);
+  }, [lastAction]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const wkStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+    const wkEnd   = format(endOfWeek(new Date(),   { weekStartsOn: 1 }), "yyyy-MM-dd");
+
+    const [{ data: activeData }, { data: weekData }, { data: empData }] = await Promise.all([
+      supabase
+        .from("staff_time_entries")
+        .select("*")
+        .gte("clock_in", since24h)
+        .is("clock_out", null)
+        .order("clock_in", { ascending: false }),
+      supabase
+        .from("staff_time_entries")
+        .select("*")
+        .gte("clock_in", `${wkStart}T00:00:00`)
+        .lte("clock_in", `${wkEnd}T23:59:59`),
+      supabase
+        .from("staff_members")
+        .select("*")
+        .eq("is_active", true)
+        .order("last_name"),
+    ]);
+
+    setTodayEntries((activeData || []) as TabletEntry[]);
+    setWeekEntries((weekData || []) as TabletEntry[]);
+    setAllStaff((empData || []) as StaffMember[]);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Realtime sync
+  useEffect(() => {
+    const ch = supabase
+      .channel("pointage-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "staff_time_entries" }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [fetchData]);
+
+  // Name autocomplete — fires after 3 chars, debounced 200ms
+  useEffect(() => {
+    if (selectedEmployee || searchQuery.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const q = searchQuery.trim();
+      const { data } = await supabase
+        .from("staff_members")
+        .select("*")
+        .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%`)
+        .eq("is_active", true)
+        .limit(6);
+      setSearchResults((data || []) as StaffMember[]);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedEmployee]);
+
+  const selectEmployee = async (emp: StaffMember) => {
+    setSelectedEmployee(emp);
+    setSearchQuery(`${emp.first_name} ${emp.last_name}`);
+    setSearchResults([]);
+    setPinError(false);
+    setPin("");
+    setClockStatus("loading");
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await supabase
+      .from("staff_time_entries")
+      .select("id")
+      .eq("employee_id", emp.id)
+      .is("clock_out", null)
+      .gte("clock_in", since24h)
+      .order("clock_in", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setClockStatus(data ? "in" : "out");
+  };
+
+  const clearSelection = () => {
+    setSelectedEmployee(null);
+    setSearchQuery("");
+    setPin("");
+    setPinError(false);
+    setSearchResults([]);
+    setClockStatus(null);
+  };
+
+  const computeWeekHours = (empId: string): number => {
+    return weekEntries
+      .filter(e => e.employee_id === empId)
+      .reduce((sum, e) => {
+        if (e.clock_out) return sum + differenceInMinutes(parseISO(e.clock_out), parseISO(e.clock_in)) / 60;
+        return sum + differenceInMinutes(now, parseISO(e.clock_in)) / 60;
+      }, 0);
+  };
+
+  const handleAction = async (action: "clock_in" | "clock_out") => {
+    if (!selectedEmployee || pin.length !== 4 || isSubmitting) return;
+    setIsSubmitting(true);
+    setPinError(false);
+
+    try {
+      const { data: pinData } = await supabase
+        .from("employee_pins")
+        .select("id")
+        .eq("employee_id", selectedEmployee.id)
+        .eq("pin_code", pin)
+        .maybeSingle();
+
+      if (!pinData) {
+        setPinError(true);
+        setPin("");
+        toast.error("Code PIN incorrect");
+        return;
+      }
+
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: activeEntry, error: activeError } = await supabase
+        .from("staff_time_entries")
+        .select("id")
+        .eq("employee_id", selectedEmployee.id)
+        .is("clock_out", null)
+        .gte("clock_in", since24h)
+        .order("clock_in", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (activeError) { toast.error("Erreur de vérification du pointage"); return; }
+
+      const weeklyTarget = selectedEmployee.weekly_hours ?? 35;
+
+      if (action === "clock_in") {
+        if (activeEntry) {
+          toast.error(`${selectedEmployee.first_name} est déjà pointé — pointez d'abord la sortie.`);
+          return;
+        }
+        const { error } = await supabase.from("staff_time_entries").insert({
+          employee_id: selectedEmployee.id,
+          clock_in: new Date().toISOString(),
+          status: "active",
+        });
+        if (error) { toast.error("Erreur pointage entrée"); return; }
+        toast.success(`✅ Entrée enregistrée — ${selectedEmployee.first_name}`);
+      } else {
+        if (!activeEntry) {
+          toast.error(`${selectedEmployee.first_name} n'a aucun pointage actif aujourd'hui.`);
+          return;
+        }
+        const { error } = await supabase
+          .from("staff_time_entries")
+          .update({ clock_out: new Date().toISOString(), status: "completed" })
+          .eq("id", activeEntry.id);
+        if (error) { toast.error("Erreur pointage sortie"); return; }
+        toast.success(`✅ Sortie enregistrée — ${selectedEmployee.first_name}`);
+      }
+
+      await fetchData();
+      const refreshedHours = computeWeekHours(selectedEmployee.id);
+      setLastAction({ employee: selectedEmployee, action, weekHours: refreshedHours, weeklyTarget, at: new Date() });
+      clearSelection();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getEmployeeName = (id: string) => {
+    const emp = allStaff.find(e => e.id === id);
+    return emp ? `${emp.first_name} ${emp.last_name}` : "Inconnu";
+  };
+
+  const activeEntries = todayEntries.filter(e => !e.clock_out);
+  const canSubmit = !!selectedEmployee && pin.length === 4 && !isSubmitting && clockStatus !== "loading";
+
+  const fmtH = (h: number) => {
+    const hh = Math.floor(h);
+    const mm = Math.round((h - hh) * 60);
+    return `${hh}h${String(Math.max(0, mm)).padStart(2, "0")}`;
+  };
+
+  if (loading) return <Spinner />;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <h2 className="text-xl font-display tracking-widest text-foreground flex items-center gap-2">
+          ⏱️ Pointage tablette
+        </h2>
+        <span className="rounded-full border border-border/50 bg-card/50 px-3 py-1 font-mono text-sm text-foreground" style={{ fontFamily: "var(--font-mono, monospace)" }}>
+          {format(now, "EEEE d MMM · HH:mm:ss", { locale: fr })}
+        </span>
+      </div>
+
+      {/* Pointage card */}
+      <div className="rounded-2xl border-2 border-border bg-gradient-to-br from-card to-muted/30 p-6">
+        <div className="flex items-center gap-3 mb-5">
+          <Clock className="w-6 h-6 text-primary" />
+          <div>
+            <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>Pointage du personnel</h3>
+            <p className="text-xs text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>Recherchez votre nom puis entrez votre code PIN</p>
+          </div>
+        </div>
+
+        <div className="space-y-4 max-w-md">
+          {/* Name search */}
+          <div ref={searchRef} className="relative">
+            <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-2" style={{ fontFamily: "var(--font-sans)" }}>
+              <Search className="w-4 h-4 text-muted-foreground" />
+              Nom ou prénom
+            </label>
+            <div className="relative">
+              <input
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (selectedEmployee) { setSelectedEmployee(null); setClockStatus(null); }
+                  setPinError(false);
+                }}
+                placeholder="Tapez au moins 3 lettres…"
+                autoComplete="off"
+                className={`w-full rounded-xl border px-4 py-2.5 text-sm bg-card text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 pr-8 transition-all ${selectedEmployee ? "border-primary bg-primary/5 font-medium" : "border-border"}`}
+                style={{ fontFamily: "var(--font-sans)" }}
+              />
+              {(searchQuery || selectedEmployee) && (
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-xl overflow-hidden">
+                {searchResults.map((emp) => (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    onClick={() => selectEmployee(emp)}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-0"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <UserCircle className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{emp.first_name} {emp.last_name}</p>
+                      <p className="text-xs text-muted-foreground capitalize mt-0.5" style={{ fontFamily: "var(--font-sans)" }}>{emp.role}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {searchQuery.length > 0 && searchQuery.length < 3 && (
+              <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: "var(--font-sans)" }}>Encore {3 - searchQuery.length} lettre(s)…</p>
+            )}
+          </div>
+
+          {/* PIN input */}
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-2" style={{ fontFamily: "var(--font-sans)" }}>
+              <KeyRound className="w-4 h-4 text-muted-foreground" />
+              Code PIN
+            </label>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              value={pin}
+              onChange={(e) => { setPin(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(false); }}
+              placeholder="● ● ● ●"
+              disabled={!selectedEmployee}
+              className={`w-full rounded-xl border px-4 py-2.5 text-center text-xl tracking-[0.5em] font-mono bg-card text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${pinError ? "border-destructive bg-destructive/5" : "border-border"}`}
+            />
+            {pinError && (
+              <p className="text-xs text-destructive mt-1" style={{ fontFamily: "var(--font-sans)" }}>Code PIN incorrect, réessayez.</p>
+            )}
+          </div>
+
+          {/* Status indicator */}
+          {clockStatus && (
+            <div
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border ${
+                clockStatus === "loading" ? "bg-muted/60 text-muted-foreground border-border" :
+                clockStatus === "in"      ? "bg-orange-500/10 text-orange-600 border-orange-500/20" :
+                                            "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+              }`}
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              {clockStatus === "loading" && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
+              {clockStatus === "in"      && <Square className="w-4 h-4 shrink-0" />}
+              {clockStatus === "out"     && <Play className="w-4 h-4 shrink-0" />}
+              {clockStatus === "loading" && "Vérification du statut…"}
+              {clockStatus === "in"      && "Déjà en service — pointez votre sortie"}
+              {clockStatus === "out"     && "Hors service — pointez votre entrée"}
+            </div>
+          )}
+
+          {/* Action buttons — only the relevant action is shown */}
+          <div className="grid grid-cols-1 gap-3 pt-1">
+            {clockStatus !== "in" && (
+              <button
+                type="button"
+                disabled={!canSubmit}
+                onClick={() => handleAction("clock_in")}
+                className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all p-5 text-center"
+              >
+                <div className="absolute top-1 right-1 opacity-20">
+                  <Play className="w-10 h-10 text-emerald-500" />
+                </div>
+                <p className="text-2xl font-display font-bold text-emerald-500 tracking-widest">ENTRÉE</p>
+                <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "var(--font-sans)" }}>Démarrer ma journée</p>
+              </button>
+            )}
+            {clockStatus !== "out" && (
+              <button
+                type="button"
+                disabled={!canSubmit}
+                onClick={() => handleAction("clock_out")}
+                className="relative overflow-hidden rounded-2xl border-2 border-orange-500/40 bg-orange-500/10 hover:bg-orange-500/20 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all p-5 text-center"
+              >
+                <div className="absolute top-1 right-1 opacity-20">
+                  <Square className="w-10 h-10 text-orange-500" />
+                </div>
+                <p className="text-2xl font-display font-bold text-orange-500 tracking-widest">SORTIE</p>
+                <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "var(--font-sans)" }}>Terminer ma journée</p>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Last action confirmation */}
+        {lastAction && (
+          <div className="mt-5 rounded-xl border-2 border-primary/40 bg-primary/10 p-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <UserCircle className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-base text-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+                    {lastAction.employee.first_name} {lastAction.employee.last_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+                    {lastAction.action === "clock_in" ? "✅ Entrée pointée" : "✅ Sortie pointée"} à {format(lastAction.at, "HH:mm")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-1 sm:flex-initial min-w-[200px]">
+                <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-baseline justify-between mb-1">
+                    <span className="text-xs text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>Cette semaine</span>
+                    <span className="text-sm font-bold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+                      {fmtH(lastAction.weekHours)}{" "}
+                      <span className="text-xs text-muted-foreground font-normal">/ {lastAction.weeklyTarget}h</span>
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        lastAction.weekHours >= lastAction.weeklyTarget ? "bg-emerald-500" :
+                        lastAction.weekHours >= lastAction.weeklyTarget * 0.8 ? "bg-amber-500" : "bg-primary"
+                      }`}
+                      style={{ width: `${Math.min(100, (lastAction.weekHours / lastAction.weeklyTarget) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* En service maintenant */}
+      {activeEntries.length > 0 && (
+        <div className="rounded-2xl border border-emerald-500/30 bg-card/50 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="relative">
+              <Users className="w-5 h-5 text-emerald-500" />
+              <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <h3 className="font-semibold text-emerald-500" style={{ fontFamily: "var(--font-sans)" }}>
+              En service maintenant ({activeEntries.length})
+            </h3>
+          </div>
+          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+            {activeEntries.map(entry => {
+              const emp = allStaff.find(e => e.id === entry.employee_id);
+              const elapsed = differenceInMinutes(now, parseISO(entry.clock_in)) / 60;
+              const weekH = computeWeekHours(entry.employee_id);
+              const target = emp?.weekly_hours ?? 35;
+              return (
+                <div key={entry.id} className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+                  <div className="flex items-start gap-2">
+                    <UserCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate" style={{ fontFamily: "var(--font-sans)" }}>
+                        {getEmployeeName(entry.employee_id)}
+                      </p>
+                      <p className="text-xs text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+                        Depuis {format(new Date(entry.clock_in), "HH:mm")} · {fmtH(elapsed)} en service
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground">Sem:</span>
+                        <span className="text-[11px] font-semibold text-foreground">{fmtH(weekH)}/{target}h</span>
+                        <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full ${weekH >= target ? "bg-emerald-500" : weekH >= target * 0.8 ? "bg-amber-500" : "bg-primary"}`}
+                            style={{ width: `${Math.min(100, (weekH / target) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Team View ────────────────────────────────────────────────────────────────
+
+const AVATAR_PALETTE = [
+  "bg-rose-100 text-rose-700",
+  "bg-amber-100 text-amber-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-sky-100 text-sky-700",
+  "bg-violet-100 text-violet-700",
+  "bg-orange-100 text-orange-700",
+];
+
+function avatarColor(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
+}
+
+function getInitials(first: string, last: string) {
+  return `${(first?.[0] || "").toUpperCase()}${(last?.[0] || "").toUpperCase()}`;
+}
+
+const EMPTY_MEMBER_FORM = {
+  first_name: "", last_name: "", email: "", phone: "",
+  role: "equipe" as StaffMember["role"],
+  contract_type: "CDI", weekly_hours: "35", hire_date: "",
+};
+
+type EmpDrawerTab = "infos" | "contrats" | "temps" | "conges" | "documents" | "permissions";
+
+const EMP_DRAWER_TABS: { id: EmpDrawerTab; label: string }[] = [
+  { id: "infos",        label: "Informations personnelles" },
+  { id: "contrats",     label: "Contrats" },
+  { id: "temps",        label: "Temps et planification" },
+  { id: "conges",       label: "Congés et Absences" },
+  { id: "documents",    label: "Documents" },
+  { id: "permissions",  label: "Rôle et permissions" },
+];
+
+function EmployeeDrawer({
+  member, open, onClose, onEdit, onToggleActive,
+}: { member: StaffMember | null; open: boolean; onClose: () => void; onEdit: (m: StaffMember) => void; onToggleActive?: (m: StaffMember) => void }) {
+  const [tab, setTab] = useState<EmpDrawerTab>("infos");
+  if (!member) return null;
+
+  const initials  = getInitials(member.first_name, member.last_name);
+  const avatarCls = avatarColor(member.id);
+
+  const roleBadgeLabel: Record<string, string> = { admin: "Admin", manager: "Manager", equipe: "Employé" };
+
+  return (
+    <>
+      {open && <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={onClose} />}
+      <div
+        className={`fixed inset-y-0 right-0 z-50 w-full sm:max-w-2xl flex flex-col bg-card shadow-2xl transition-transform duration-300 overflow-y-auto ${open ? "translate-x-0" : "translate-x-full"}`}
+      >
+        {/* Green/primary header */}
+        <div className="p-6 text-white" style={{ background: "var(--primary)" }}>
+          <div className="flex items-center gap-4">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-lg font-bold ${avatarCls}`}>
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-display text-2xl tracking-widest truncate">
+                {member.first_name} {member.last_name}
+              </h2>
+              <p className="text-white/80 text-sm capitalize" style={{ fontFamily: "var(--font-sans)" }}>
+                {roleBadgeLabel[member.role] ?? member.role}
+              </p>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-white/20 transition">
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-5 text-xs">
+            {[
+              { label: "Début contrat",   value: member.hire_date || "—" },
+              { label: "Type contrat",    value: member.contract_type || "—" },
+              { label: "Heures hebdo",    value: `${member.weekly_hours ?? 35}h` },
+            ].map(col => (
+              <div key={col.label}>
+                <p className="text-white/60 uppercase tracking-wider">{col.label}</p>
+                <p className="font-medium mt-0.5 truncate" style={{ fontFamily: "var(--font-sans)" }}>{col.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-border/50 bg-card sticky top-0 z-10">
+          <div className="px-6 py-2 flex gap-1 overflow-x-auto">
+            {EMP_DRAWER_TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`px-3 py-2 text-xs font-medium whitespace-nowrap rounded-md transition-colors ${
+                  tab === t.id
+                    ? "text-primary border-b-2 border-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 flex-1">
+          {tab === "infos" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <DrawerCard title="État civil" icon={<Users size={16} />}>
+                <DrawerRow label="Prénom" value={member.first_name} />
+                <DrawerRow label="Nom" value={member.last_name} />
+                <DrawerRow label="Rôle" value={roleBadgeLabel[member.role] ?? member.role} />
+              </DrawerCard>
+              <DrawerCard title="Coordonnées" icon={<Phone size={16} />}>
+                <DrawerRow label="Email" value={member.email || "—"} />
+                <DrawerRow label="Mobile" value={member.phone || "—"} />
+              </DrawerCard>
+            </div>
+          )}
+          {tab === "contrats" && (
+            <DrawerCard title="Contrat actuel" icon={<Briefcase size={16} />}>
+              <DrawerRow label="Type" value={member.contract_type || "—"} />
+              <DrawerRow label="Date de début" value={member.hire_date || "—"} />
+              <DrawerRow label="Heures hebdo" value={`${member.weekly_hours ?? 35}h`} />
+            </DrawerCard>
+          )}
+          {tab === "temps" && (
+            <p className="text-sm text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+              Heures contractuelles, planifiées et pointées (à venir).
+            </p>
+          )}
+          {tab === "conges" && (
+            <p className="text-sm text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+              Solde de congés et absences (à venir).
+            </p>
+          )}
+          {tab === "documents" && (
+            <p className="text-sm text-muted-foreground" style={{ fontFamily: "var(--font-sans)" }}>
+              Aucun document pour le moment.
+            </p>
+          )}
+          {tab === "permissions" && (
+            <DrawerCard title="Rôle système" icon={<Shield size={16} />}>
+              <DrawerRow label="Rôle" value={roleBadgeLabel[member.role] ?? member.role} />
+              <DrawerRow label="Statut" value={member.is_active ? "Actif" : "Inactif"} />
+              {onToggleActive && (
+                <div className="pt-3">
+                  <button
+                    onClick={() => { onToggleActive(member); onClose(); }}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${member.is_active
+                      ? "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20"
+                      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"}`}
+                    style={{ fontFamily: "var(--font-sans)" }}>
+                    {member.is_active ? "Désactiver le compte" : "Réactiver le compte"}
+                  </button>
+                </div>
+              )}
+            </DrawerCard>
+          )}
+        </div>
+
+        {/* Sticky CTA */}
+        <div className="sticky bottom-0 p-4 bg-gradient-to-t from-card to-transparent flex justify-center">
+          <button
+            onClick={() => { onEdit(member); onClose(); }}
+            className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background shadow-lg transition hover:opacity-90"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            <Pencil size={16} />
+            Modifier les informations personnelles
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function DrawerCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border/50 bg-card/50 p-4">
+      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/40">
+        <span className="text-primary">{icon}</span>
+        <h3 className="text-sm font-semibold text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{title}</h3>
+      </div>
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+
+function DrawerRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-baseline gap-3 text-sm py-1.5 border-b border-border/20 last:border-0">
+      <span className="text-muted-foreground text-xs" style={{ fontFamily: "var(--font-sans)" }}>{label}</span>
+      <span className="font-medium text-right truncate text-foreground" style={{ fontFamily: "var(--font-sans)" }}>{value}</span>
+    </div>
+  );
+}
+
+// ─── Products View ────────────────────────────────────────────────────────────
+
+type ProductOption = { id: string; name: string; price: number; type?: string; };
+type Product = {
+  id: string; created_at: string; name: string; description: string | null;
+  price: number; image_url: string | null; category: string;
+  is_new: boolean; is_best_seller: boolean; is_available: boolean;
+  is_signature: boolean; is_featured: boolean; display_order: number;
+  calories: number | null; options: ProductOption[];
+};
+type ProductForm = Omit<Product, "id" | "created_at">;
+
+const defaultProductForm: ProductForm = {
+  name: "", description: "", price: 0, image_url: "", category: "",
+  is_new: false, is_best_seller: false, is_available: true,
+  is_signature: false, is_featured: false, display_order: 0,
+  calories: null, options: [],
+};
+
+function ProductsView() {
+  const [products, setProducts]       = useState<Product[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [saving, setSaving]           = useState(false);
+  const [searchTerm, setSearchTerm]   = useState("");
+  const [catFilter, setCatFilter]     = useState("all");
+  const [modalOpen, setModalOpen]     = useState(false);
+  const [editingProd, setEditingProd] = useState<Product | null>(null);
+  const [form, setForm]               = useState<ProductForm>(defaultProductForm);
+  const [formTab, setFormTab]         = useState<"info" | "pricing" | "options">("info");
+  const [inlineEdit, setInlineEdit]   = useState<{ productId: string; field: "price" | "menuPrice"; value: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("products").select("*").order("category").order("display_order");
+    if (error) toast.error("Erreur chargement produits");
+    else setProducts((data || []).map(p => ({ ...p, options: Array.isArray(p.options) ? (p.options as ProductOption[]) : [] })));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const categories = useMemo(() => [...new Set(products.map(p => p.category))].sort(), [products]);
+
+  const filtered = products.filter(p => {
+    const okSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const okCat    = catFilter === "all" || p.category === catFilter;
+    return okSearch && okCat;
+  });
+
+  const grouped = filtered.reduce((acc, p) => {
+    if (!acc[p.category]) acc[p.category] = [];
+    acc[p.category].push(p);
+    return acc;
+  }, {} as Record<string, Product[]>);
+
+  function openNew() { setEditingProd(null); setForm(defaultProductForm); setFormTab("info"); setModalOpen(true); }
+
+  function openEdit(p: Product) {
+    setEditingProd(p);
+    setForm({ name: p.name, description: p.description || "", price: p.price, image_url: p.image_url || "",
+      category: p.category, is_new: p.is_new, is_best_seller: p.is_best_seller, is_available: p.is_available,
+      is_signature: p.is_signature, is_featured: p.is_featured, display_order: p.display_order,
+      calories: p.calories, options: p.options || [] });
+    setFormTab("info"); setModalOpen(true);
+  }
+
+  async function handleSubmit() {
+    if (!form.name.trim() || form.price <= 0) { toast.error("Nom et prix requis"); return; }
+    if (!form.category.trim()) { toast.error("Catégorie requise"); return; }
+    setSaving(true);
+    const payload = { name: form.name, description: form.description || null, price: form.price,
+      image_url: form.image_url || null, category: form.category.trim(), is_new: form.is_new,
+      is_best_seller: form.is_best_seller, is_available: form.is_available, is_signature: form.is_signature,
+      is_featured: form.is_featured, display_order: form.display_order, calories: form.calories, options: form.options };
+    if (editingProd) {
+      const { error } = await supabase.from("products").update(payload).eq("id", editingProd.id);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      toast.success("Produit mis à jour");
+    } else {
+      const { error } = await supabase.from("products").insert(payload);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      toast.success("Produit créé");
+    }
+    setModalOpen(false); await load(); setSaving(false);
+  }
+
+  async function handleDelete(p: Product) {
+    const { error } = await supabase.from("products").delete().eq("id", p.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Produit supprimé");
+    setDeleteConfirm(null);
+    setProducts(prev => prev.filter(x => x.id !== p.id));
+  }
+
+  async function toggleAvail(p: Product) {
+    const { error } = await supabase.from("products").update({ is_available: !p.is_available }).eq("id", p.id);
+    if (error) { toast.error("Erreur"); return; }
+    setProducts(prev => prev.map(x => x.id === p.id ? { ...x, is_available: !p.is_available } : x));
+    toast.success(p.is_available ? "Produit indisponible" : "Produit disponible");
+  }
+
+  async function saveInlineEdit() {
+    if (!inlineEdit) return;
+    const p = products.find(x => x.id === inlineEdit.productId);
+    if (!p) return;
+    const val = parseFloat(inlineEdit.value) || 0;
+    setSaving(true);
+    if (inlineEdit.field === "price") {
+      const { error } = await supabase.from("products").update({ price: val }).eq("id", p.id);
+      if (error) { toast.error("Erreur"); setSaving(false); return; }
+      setProducts(prev => prev.map(x => x.id === p.id ? { ...x, price: val } : x));
+    } else {
+      const supplement = Math.max(0, val - p.price);
+      const updatedOptions = p.options.map(o => o.id === "menu" ? { ...o, price: supplement } : o);
+      const { error } = await supabase.from("products").update({ options: updatedOptions }).eq("id", p.id);
+      if (error) { toast.error("Erreur"); setSaving(false); return; }
+      setProducts(prev => prev.map(x => x.id === p.id ? { ...x, options: updatedOptions } : x));
+    }
+    toast.success("Prix mis à jour");
+    setInlineEdit(null); setSaving(false);
+  }
+
+  function fToggle(key: keyof ProductForm) { setForm(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] })); }
+  function addOpt() { setForm(prev => ({ ...prev, options: [...prev.options, { id: `opt-${Date.now()}`, name: "", price: 0, type: "single" }] })); }
+  function updOpt(idx: number, field: keyof ProductOption, val: string | number) {
+    setForm(prev => ({ ...prev, options: prev.options.map((o, i) => i === idx ? { ...o, [field]: val } : o) }));
+  }
+  function remOpt(idx: number) { setForm(prev => ({ ...prev, options: prev.options.filter((_, i) => i !== idx) })); }
+
+  const pInp = "w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground/50";
+  const pLbl = "block text-[11px] font-medium text-muted-foreground mb-1";
+
+  if (loading) return <Spinner />;
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Package size={22} className="text-primary" />
+            Gestion des produits
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {products.length} produits • {products.filter(p => p.is_available).length} disponibles
+          </p>
+        </div>
+        <button onClick={openNew}
+          className="flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2 text-sm font-semibold hover:opacity-80 transition-opacity shrink-0">
+          <Plus size={16} /> Nouveau produit
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 rounded-2xl border border-border/50 bg-card/50 p-4">
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input placeholder="Rechercher un produit..." value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)} className={`${pInp} pl-9`} />
+        </div>
+        <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
+          className={`${pInp} sm:w-52 cursor-pointer`}>
+          <option value="all">Toutes les catégories</option>
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <button onClick={load}
+          className="flex items-center gap-2 rounded-lg border border-border/50 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+          <RefreshCw size={14} />
+        </button>
+      </div>
+
+      {/* Products grouped by category */}
+      <div className="space-y-6">
+        {Object.entries(grouped).map(([cat, catProds]) => (
+          <div key={cat} className="space-y-3">
+            <div className="sticky top-0 z-10 py-2 border-b border-primary/20 bg-background/95 backdrop-blur flex items-center gap-2">
+              <Package size={17} className="text-primary" />
+              <h3 className="text-base font-bold text-primary">{cat}</h3>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">{catProds.length}</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {catProds.map(p => {
+                const menuOpt = p.options?.find(o => o.id === "menu");
+                const menuPrice = menuOpt ? p.price + menuOpt.price : null;
+                return (
+                  <div key={p.id}
+                    className={`relative overflow-hidden bg-card rounded-xl border border-border p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md group ${!p.is_available ? "opacity-60" : ""}`}>
+                    {/* Quick actions */}
+                    <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(p)}
+                        className="h-8 w-8 rounded-lg bg-background/95 border border-border/50 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <Pencil size={13} />
+                      </button>
+                      <button onClick={() => setDeleteConfirm(p)}
+                        className="h-8 w-8 rounded-lg bg-destructive shadow-sm flex items-center justify-center text-destructive-foreground hover:opacity-80 transition-opacity">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                    {/* Product header */}
+                    <div className="flex gap-3 mb-3 pr-20 sm:pr-0">
+                      <div className="w-[72px] h-[72px] rounded-lg bg-muted overflow-hidden shrink-0 ring-1 ring-border group-hover:scale-[1.03] transition-transform">
+                        {(p.image_url || PRODUCT_LOCAL_IMAGES[p.name])
+                          ? <img src={p.image_url || PRODUCT_LOCAL_IMAGES[p.name]} alt={p.name} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={22} className="text-muted-foreground/40" /></div>
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground leading-tight line-clamp-2">{p.name}</p>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {p.is_featured && <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white"><Star size={9} />AVANT</span>}
+                          {p.is_new && <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-green-500 text-white"><Sparkles size={9} />NEW</span>}
+                          {p.is_best_seller && <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary text-primary-foreground"><Flame size={9} />BEST</span>}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Inline price edit */}
+                    <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/35 px-3 py-2">
+                      <div className="flex-1">
+                        <p className="text-[10px] uppercase text-muted-foreground font-semibold">Seul</p>
+                        {inlineEdit?.productId === p.id && inlineEdit.field === "price" ? (
+                          <div className="flex items-center gap-1">
+                            <input type="number" step="0.10" min="0" value={inlineEdit.value}
+                              onChange={e => setInlineEdit({ ...inlineEdit, value: e.target.value })}
+                              className="h-7 w-20 text-sm font-bold px-1 rounded border border-primary/40 bg-background text-foreground outline-none"
+                              autoFocus
+                              onKeyDown={e => { if (e.key === "Enter") saveInlineEdit(); if (e.key === "Escape") setInlineEdit(null); }} />
+                            <button onClick={saveInlineEdit} className="text-emerald-600 hover:text-emerald-700"><Check size={13} /></button>
+                            <button onClick={() => setInlineEdit(null)} className="text-destructive"><X size={13} /></button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setInlineEdit({ productId: p.id, field: "price", value: String(p.price) })}
+                            className="flex items-center gap-1 rounded px-1 py-0.5 text-lg font-bold hover:bg-background hover:text-primary transition-colors group/price">
+                            {p.price.toFixed(2)}€
+                            <Pencil size={10} className="opacity-0 group-hover/price:opacity-40 transition-opacity" />
+                          </button>
+                        )}
+                      </div>
+                      {menuOpt && (
+                        <div className="flex-1 text-right">
+                          <p className="text-[10px] uppercase text-primary font-semibold">🍟 Menu</p>
+                          {inlineEdit?.productId === p.id && inlineEdit.field === "menuPrice" ? (
+                            <div className="flex items-center gap-1 justify-end">
+                              <input type="number" step="0.10" min="0" value={inlineEdit.value}
+                                onChange={e => setInlineEdit({ ...inlineEdit, value: e.target.value })}
+                                className="h-7 w-20 text-sm font-bold px-1 rounded border border-primary/40 bg-background text-foreground outline-none text-right"
+                                autoFocus
+                                onKeyDown={e => { if (e.key === "Enter") saveInlineEdit(); if (e.key === "Escape") setInlineEdit(null); }} />
+                              <button onClick={saveInlineEdit} className="text-emerald-600 hover:text-emerald-700"><Check size={13} /></button>
+                              <button onClick={() => setInlineEdit(null)} className="text-destructive"><X size={13} /></button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setInlineEdit({ productId: p.id, field: "menuPrice", value: String(menuPrice || 0) })}
+                              className="flex items-center gap-1 justify-end w-full rounded px-1 py-0.5 text-lg font-bold text-primary hover:bg-background transition-colors group/menu">
+                              {menuPrice?.toFixed(2)}€
+                              <Pencil size={10} className="opacity-0 group-hover/menu:opacity-40 transition-opacity" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {/* Unavailable banner */}
+                    {!p.is_available && (
+                      <div className="absolute inset-x-0 bottom-0 bg-destructive/10 px-3 py-1 text-center text-[10px] font-semibold uppercase text-destructive">
+                        Indisponible
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground">
+            <Package size={44} className="mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Aucun produit trouvé</p>
+            <p className="text-sm mt-1 opacity-60">Modifiez vos filtres ou créez un nouveau produit</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer stats */}
+      <div className="pt-4 border-t border-border/40 flex items-center justify-between text-sm text-muted-foreground">
+        <span><span className="font-semibold text-foreground">{filtered.length}</span> produit(s)</span>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" />{filtered.filter(p => p.is_available).length} dispo</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-destructive" />{filtered.filter(p => !p.is_available).length} indispo</span>
+        </div>
+      </div>
+
+      {/* Add / Edit modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setModalOpen(false)}>
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-border/70 bg-card shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
+              <h2 className="text-lg font-bold text-foreground">{editingProd ? "Modifier le produit" : "Nouveau produit"}</h2>
+              <button onClick={() => setModalOpen(false)} className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground"><X size={16} /></button>
+            </div>
+            {/* Tabs */}
+            <div className="flex border-b border-border/50">
+              {(["info", "pricing", "options"] as const).map(tab => (
+                <button key={tab} onClick={() => setFormTab(tab)}
+                  className={`flex-1 py-2.5 text-sm font-medium transition-colors ${formTab === tab ? "border-b-2 border-primary text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                  {tab === "info" ? "Informations" : tab === "pricing" ? "Prix & Options" : "Personnalisation"}
+                </button>
+              ))}
+            </div>
+            <div className="overflow-y-auto max-h-[55vh] px-6 py-5 space-y-4">
+              {formTab === "info" && (
+                <>
+                  <div>
+                    <label className={pLbl}>Nom du produit *</label>
+                    <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="Ex: Toast Jambon Fromage" className={pInp} />
+                  </div>
+                  <div>
+                    <label className={pLbl}>Description</label>
+                    <textarea value={form.description || ""} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                      placeholder="Description courte..." rows={3} className={`${pInp} resize-none`} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={pLbl}>Catégorie *</label>
+                      <input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                        placeholder="Ex: Toasts" list="ct-cats" className={pInp} />
+                      <datalist id="ct-cats">{categories.map(c => <option key={c} value={c} />)}</datalist>
+                    </div>
+                    <div>
+                      <label className={pLbl}>Calories</label>
+                      <input type="number" value={form.calories || ""} onChange={e => setForm(f => ({ ...f, calories: parseInt(e.target.value) || null }))}
+                        placeholder="Ex: 650" className={pInp} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={pLbl}>URL de l'image</label>
+                    <input value={form.image_url || ""} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+                      placeholder="https://..." className={pInp} />
+                    {(form.image_url || (editingProd && PRODUCT_LOCAL_IMAGES[editingProd.name])) && (
+                      <div className="mt-2 w-20 h-20 rounded-lg overflow-hidden border border-border/50">
+                        <img src={form.image_url || (editingProd ? PRODUCT_LOCAL_IMAGES[editingProd.name] : undefined)} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <p className={pLbl}>Badges et mise en avant</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { key: "is_featured" as const, label: "Mise en avant", icon: <Star size={14} className="text-amber-500" /> },
+                        { key: "is_new" as const, label: "Nouveau", icon: <Sparkles size={14} className="text-green-500" /> },
+                        { key: "is_best_seller" as const, label: "Best-seller", icon: <Flame size={14} className="text-primary" /> },
+                        { key: "is_available" as const, label: "Disponible", icon: <Check size={14} className="text-emerald-600" /> },
+                      ]).map(({ key, label, icon }) => (
+                        <div key={key} className="flex items-center justify-between p-2.5 bg-muted/40 rounded-lg">
+                          <div className="flex items-center gap-2 text-sm">{icon}<span>{label}</span></div>
+                          <button type="button" onClick={() => fToggle(key)}
+                            className={`relative w-9 h-5 rounded-full transition-colors ${form[key] ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form[key] ? "translate-x-4" : ""}`} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+              {formTab === "pricing" && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={pLbl}>Prix unitaire (€) *</label>
+                      <div className="relative">
+                        <input type="number" step="0.10" min="0" value={form.price}
+                          onChange={e => setForm(f => ({ ...f, price: parseFloat(e.target.value) || 0 }))}
+                          className={`${pInp} text-xl font-bold pr-8`} />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">€</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className={pLbl}>Ordre d'affichage</label>
+                      <input type="number" value={form.display_order}
+                        onChange={e => setForm(f => ({ ...f, display_order: parseInt(e.target.value) || 0 }))}
+                        className={pInp} />
+                    </div>
+                  </div>
+                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">🍟 Option Menu</p>
+                        <p className="text-xs text-muted-foreground">Frites + boisson inclus</p>
+                      </div>
+                      <button type="button"
+                        onClick={() => {
+                          const has = form.options.some(o => o.id === "menu");
+                          setForm(f => ({
+                            ...f,
+                            options: has
+                              ? f.options.filter(o => o.id !== "menu")
+                              : [...f.options.filter(o => o.id !== "menu"), { id: "menu", name: "En Menu", price: 4.50, type: "menu" }],
+                          }));
+                        }}
+                        className={`relative w-9 h-5 rounded-full transition-colors ${form.options.some(o => o.id === "menu") ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.options.some(o => o.id === "menu") ? "translate-x-4" : ""}`} />
+                      </button>
+                    </div>
+                    {form.options.some(o => o.id === "menu") && (
+                      <div className="flex items-center gap-2">
+                        <label className={`${pLbl} mb-0 whitespace-nowrap`}>Supplément menu :</label>
+                        <div className="relative w-24">
+                          <input type="number" step="0.10" min="0"
+                            value={form.options.find(o => o.id === "menu")?.price ?? 4.50}
+                            onChange={e => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setForm(f => ({ ...f, options: f.options.map(o => o.id === "menu" ? { ...o, price: val } : o) }));
+                            }}
+                            className={`${pInp} pr-6 text-sm`} />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">€</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+              {formTab === "options" && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Options personnalisables</p>
+                      <p className="text-xs text-muted-foreground">Suppléments, sauces...</p>
+                    </div>
+                    <button onClick={addOpt}
+                      className="flex items-center gap-1 rounded-lg border border-border/50 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                      <Plus size={13} /> Ajouter
+                    </button>
+                  </div>
+                  {form.options.filter(o => o.id !== "menu").map((opt) => {
+                    const idx = form.options.indexOf(opt);
+                    return (
+                      <div key={opt.id} className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+                        <input placeholder="Nom de l'option" value={opt.name}
+                          onChange={e => updOpt(idx, "name", e.target.value)} className={`${pInp} flex-1`} />
+                        <div className="relative w-20">
+                          <input type="number" step="0.10" min="0" value={opt.price}
+                            onChange={e => updOpt(idx, "price", parseFloat(e.target.value) || 0)}
+                            className={`${pInp} pr-6 text-sm`} />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">€</span>
+                        </div>
+                        <button onClick={() => remOpt(idx)} className="p-1.5 text-destructive hover:bg-red-50 rounded-lg transition-colors">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {form.options.filter(o => o.id !== "menu").length === 0 && (
+                    <div className="text-center py-8 text-sm text-muted-foreground/60">Aucune option personnalisée</div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-between border-t border-border/50 px-6 py-4">
+              <button onClick={() => setModalOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Annuler</button>
+              <button onClick={handleSubmit} disabled={saving}
+                className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background hover:opacity-80 transition-opacity disabled:opacity-50">
+                {saving && <Loader2 size={14} className="animate-spin" />}
+                {editingProd ? "Enregistrer" : "Créer le produit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-border/70 bg-card shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                <AlertTriangle size={18} className="text-destructive" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Supprimer ce produit ?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">"{deleteConfirm.name}" sera définitivement supprimé.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteConfirm(null)}
+                className="flex-1 rounded-full border border-border/50 py-2 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors">
+                Annuler
+              </button>
+              <button onClick={() => handleDelete(deleteConfirm)}
+                className="flex-1 rounded-full bg-destructive py-2 text-sm font-semibold text-destructive-foreground hover:opacity-80 transition-opacity">
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TeamView() {
+  const [members, setMembers]       = useState<StaffMember[]>([]);
+  const [pinMap, setPinMap]         = useState<Record<string, boolean>>({});
+  const [clockedInSet, setClockedInSet] = useState<Set<string>>(new Set());
+  const [loading, setLoading]       = useState(true);
+  const [addOpen, setAddOpen]   = useState(false);
+  const [addRole, setAddRole]   = useState<"equipe" | "livreur">("equipe");
+  const [nameInput, setNameInput] = useState("");
+  const [addPin, setAddPin]     = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addPhone, setAddPhone] = useState("");
+  const [saving, setSaving]     = useState(false);
+
+  const load = useCallback(async () => {
+    const [{ data: emps }, { data: pinData }, { data: activeEntries }] = await Promise.all([
+      supabase.from("staff_members").select("*").order("last_name"),
+      supabase.from("employee_pins").select("employee_id"),
+      supabase.from("staff_time_entries").select("employee_id").is("clock_out", null),
+    ]);
+    if (emps) setMembers(emps as StaffMember[]);
+    const map: Record<string, boolean> = {};
+    (pinData || []).forEach((p: any) => { map[p.employee_id] = true; });
+    setPinMap(map);
+    const clockedIn = new Set<string>((activeEntries || []).map((e: any) => e.employee_id));
+    setClockedInSet(clockedIn);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const staffList  = members.filter(m => m.role !== "livreur");
+  const livreurs   = members.filter(m => m.role === "livreur");
+
+  async function handleAdd() {
+    const trimmed = nameInput.trim();
+    if (!trimmed) { toast.error("Nom complet requis"); return; }
+    const parts = trimmed.split(/\s+/);
+    const first_name = parts[0];
+    const last_name  = parts.slice(1).join(" ") || parts[0];
+    if (addRole === "equipe" && addPin.length !== 4) {
+      toast.error("Code PIN de 4 chiffres requis"); return;
+    }
+    setSaving(true);
+    const { data: emp, error } = await supabase
+      .from("staff_members")
+      .insert({ first_name, last_name, email: addEmail.trim() || null, phone: addPhone.trim() || null, role: addRole, is_active: true })
+      .select()
+      .single();
+    if (error || !emp) { toast.error("Erreur : " + (error?.message ?? "inconnue")); setSaving(false); return; }
+    if (addRole === "equipe" && addPin) {
+      await supabase.from("employee_pins").insert({ employee_id: (emp as StaffMember).id, pin_code: addPin });
+    }
+    toast.success(`${first_name} ${last_name} ajouté(e) !`);
+    setAddOpen(false);
+    setNameInput(""); setAddPin(""); setAddEmail(""); setAddPhone(""); setAddRole("equipe");
+    await load();
+    setSaving(false);
+  }
+
+  async function deleteMember(m: StaffMember) {
+    if (!window.confirm(`Supprimer ${m.first_name} ${m.last_name} ?`)) return;
+    await supabase.from("staff_members").delete().eq("id", m.id);
+    setMembers(prev => prev.filter(x => x.id !== m.id));
+    toast.success("Supprimé");
+  }
+
+  async function toggleActive(m: StaffMember) {
+    await supabase.from("staff_members").update({ is_active: !m.is_active }).eq("id", m.id);
+    setMembers(prev => prev.map(x => x.id === m.id ? { ...x, is_active: !m.is_active } : x));
+    toast.success(m.is_active ? "Mis hors service" : "Remis en service");
+  }
+
+  const statusBadge = (active: boolean) => (
+    <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-slate-400"}`} />
+      {active ? "En service" : "Hors service"}
+    </span>
+  );
+
+  const thCls = "px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+  const tdCls = "px-4 py-3";
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Équipe</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Gérez votre équipe</p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
+            {staffList.length} staff · {livreurs.length} livreur(s)
+          </span>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="rounded-full bg-foreground text-background px-4 py-2 text-sm font-semibold hover:opacity-80 transition-opacity"
+          >
+            Ajouter un membre
+          </button>
+        </div>
+      </div>
+
+      {/* Staff section */}
+      <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/50">
+        <div className="px-4 py-3 border-b border-border/30 flex items-center gap-3">
+          <span className="text-sm font-semibold text-foreground">Staff</span>
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-foreground text-background">{staffList.length}</span>
+        </div>
+        {loading ? <Spinner /> : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/30 bg-background/30">
+                  <th className={thCls}>Nom</th>
+                  <th className={thCls}>Restaurant</th>
+                  <th className={thCls}>PIN pointage</th>
+                  <th className={thCls}>Statut</th>
+                  <th className={thCls}>Ajouté le</th>
+                  <th className={`${thCls} text-right`}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {staffList.map(m => (
+                  <tr key={m.id} className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors">
+                    <td className={tdCls}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${avatarColor(m.id)}`}>
+                          {getInitials(m.first_name, m.last_name)}
+                        </div>
+                        <span className="font-medium text-foreground">{m.first_name} {m.last_name}</span>
+                      </div>
+                    </td>
+                    <td className={`${tdCls} text-muted-foreground`}>Crazy Toasty</td>
+                    <td className={tdCls}>
+                      {pinMap[m.id]
+                        ? <span className="inline-flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md text-slate-600 tracking-[0.25em] text-[11px]">● ● ● ●</span>
+                        : <span className="text-xs italic text-muted-foreground/50">Non défini</span>
+                      }
+                    </td>
+                    <td className={tdCls}>{statusBadge(clockedInSet.has(m.id))}</td>
+                    <td className={`${tdCls} text-muted-foreground text-xs`}>
+                      {format(new Date(m.created_at), "d MMM yyyy", { locale: fr })}
+                    </td>
+                    <td className={`${tdCls} text-right`}>
+                      <div className="inline-flex items-center gap-1">
+                        <button onClick={() => toggleActive(m)} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
+                          title={m.is_active ? "Mettre hors service" : "Remettre en service"}>
+                          {m.is_active
+                            ? <XCircle size={15} className="text-amber-500" />
+                            : <CheckCircle size={15} className="text-emerald-500" />}
+                        </button>
+                        <button onClick={() => deleteMember(m)} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+                          <Trash2 size={15} className="text-red-400" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {staffList.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">Aucun membre staff</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Livreurs section */}
+      <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/50">
+        <div className="px-4 py-3 border-b border-border/30 flex items-center gap-3">
+          <span className="text-sm font-semibold text-foreground">Livreurs</span>
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-foreground text-background">{livreurs.length}</span>
+        </div>
+        {loading ? <Spinner /> : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/30 bg-background/30">
+                  <th className={thCls}>Nom</th>
+                  <th className={thCls}>Email</th>
+                  <th className={thCls}>Restaurant</th>
+                  <th className={thCls}>Ajouté le</th>
+                  <th className={`${thCls} text-right`}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {livreurs.map(m => (
+                  <tr key={m.id} className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors">
+                    <td className={tdCls}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${avatarColor(m.id)}`}>
+                          {getInitials(m.first_name, m.last_name)}
+                        </div>
+                        <span className="font-medium text-foreground">{m.first_name} {m.last_name}</span>
+                      </div>
+                    </td>
+                    <td className={`${tdCls} text-muted-foreground`}>{m.email || <span className="italic opacity-60">—</span>}</td>
+                    <td className={`${tdCls} text-muted-foreground`}>Crazy Toasty</td>
+                    <td className={`${tdCls} text-muted-foreground text-xs`}>
+                      {format(new Date(m.created_at), "d MMM yyyy", { locale: fr })}
+                    </td>
+                    <td className={`${tdCls} text-right`}>
+                      <div className="inline-flex items-center gap-1">
+                        <button onClick={() => toggleActive(m)} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
+                          title={m.is_active ? "Désactiver" : "Réactiver"}>
+                          {m.is_active
+                            ? <XCircle size={15} className="text-amber-500" />
+                            : <CheckCircle size={15} className="text-emerald-500" />}
+                        </button>
+                        <button onClick={() => deleteMember(m)} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Supprimer">
+                          <Trash2 size={15} className="text-red-400" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {livreurs.length === 0 && (
+                  <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-muted-foreground">Aucun livreur</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Add modal */}
+      {addOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setAddOpen(false)}>
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border/70 bg-card shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
+              <h2 className="text-lg font-bold text-foreground">Nouveau membre</h2>
+              <button onClick={() => setAddOpen(false)} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors text-muted-foreground">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-5">
+              {/* Role selector */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Rôle</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {(["equipe", "livreur"] as const).map(r => {
+                    const active = addRole === r;
+                    const isStaff = r === "equipe";
+                    return (
+                      <button key={r} type="button" onClick={() => setAddRole(r)}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all ${
+                          active ? "border-foreground bg-foreground text-background" : "border-border/50 text-foreground hover:border-foreground/40"
+                        }`}>
+                        {isStaff ? <Clock size={20} /> : <Bike size={20} />}
+                        <span>{isStaff ? "Staff" : "Livreur"}</span>
+                        <span className={`text-[11px] font-normal ${active ? "text-background/70" : "text-muted-foreground"}`}>
+                          {isStaff ? "Pointage PIN" : "Accès appli"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Nom complet */}
+              <TeamField label="Nom complet">
+                <input value={nameInput} onChange={e => setNameInput(e.target.value)}
+                  placeholder="Prénom Nom" className={teamInput} />
+              </TeamField>
+
+              {/* Code PIN – staff only */}
+              {addRole === "equipe" && (
+                <TeamField label="Code PIN">
+                  <div className="relative">
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={addPin}
+                      onChange={e => setAddPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      placeholder="• • • •"
+                      className={`${teamInput} tracking-widest pr-12`}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                      {addPin.length}/4
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">4 chiffres pour le pointage</p>
+                </TeamField>
+              )}
+
+              {/* Email */}
+              <TeamField label="Email">
+                <input type="email" value={addEmail} onChange={e => setAddEmail(e.target.value)}
+                  placeholder="marie@crazytoasty.fr" className={teamInput} />
+              </TeamField>
+
+              {/* Téléphone */}
+              <TeamField label="Téléphone">
+                <input value={addPhone} onChange={e => setAddPhone(e.target.value)}
+                  placeholder="+33 6 12 34 56 78" className={teamInput} />
+              </TeamField>
+
+              {/* Restaurant (single, static) */}
+              <TeamField label="Restaurant">
+                <input value="Crazy Toasty" readOnly disabled
+                  className={`${teamInput} opacity-60 cursor-not-allowed bg-muted`} />
+                <p className="mt-1 text-[11px] text-muted-foreground">À insérer ultérieurement</p>
+              </TeamField>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-border/50 px-6 py-4">
+              <button onClick={() => setAddOpen(false)}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Close
+              </button>
+              <button onClick={handleAdd} disabled={saving}
+                className="flex items-center gap-2 rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background hover:opacity-80 transition-opacity disabled:opacity-50">
+                {saving && <Loader2 size={14} className="animate-spin" />}
+                Ajouter le membre
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const teamInput = "w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/50 focus:border-primary/40 focus:ring-2 focus:ring-primary/20";
+
+function TeamField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1 block text-[11px] font-medium text-muted-foreground"
+        style={{ fontFamily: "var(--font-sans)" }}>{label}</label>
+      {children}
     </div>
   );
 }

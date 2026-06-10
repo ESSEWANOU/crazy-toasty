@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase";
+import { LOCAL_IMAGES as PRODUCT_LOCAL_IMAGES } from "@/lib/product-images";
 import bowlOg from "@/assets/bowl-og.webp";
 import bowlSpicy from "@/assets/bowl-spicy.webp";
 import bowlCordon from "@/assets/royal-cordon.webp";
@@ -47,6 +49,20 @@ import ranchImg from "@/assets/ranch.webp";
 import ketchupImg from "@/assets/ketchup.webp";
 import mayonnaiseImg from "@/assets/mayonnaise.webp";
 import crazyCaesarCrousty from "@/assets/crazy-caesar-crousty.webp";
+
+type DBProduct = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  image_url: string | null;
+  category: string;
+  is_new: boolean;
+  is_best_seller: boolean;
+  is_available: boolean;
+  display_order: number;
+  options: { id: string; name: string; price: number; type?: string }[];
+};
 
 // liste de sauvegarde pour le panier, à stocker dans le localStorage
 type SavedItem = {
@@ -139,17 +155,14 @@ function SavedOrderPanel({
       )}
 
       {items.length > 0 && (
-        <div className="mt-4 space-y-2">
+        <div className="mt-4">
           <button
             type="button"
-            disabled
-            className="w-full rounded-full bg-primary/40 py-3 text-sm font-bold text-primary-foreground/50 cursor-not-allowed"
+            onClick={onCommander}
+            className="w-full rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-glow transition hover:opacity-90"
           >
             {t("menu.commander")}
           </button>
-          <p className="text-center text-xs text-amber-400/80">
-            Les commandes en ligne sont temporairement bloquées
-          </p>
         </div>
       )}
 
@@ -783,6 +796,40 @@ const MENU_ITEMS: Item[] = [
   },
 ];
 
+const LOCAL_IMAGES: Record<string, string | null> = PRODUCT_LOCAL_IMAGES;
+
+// English name/description fallback for i18n (DB only stores French)
+const STATIC_META: Record<string, { nameEn?: string; descriptionEn?: string | null }> =
+  Object.fromEntries(
+    MENU_ITEMS.map((item) => [item.name, { nameEn: item.nameEn, descriptionEn: item.descriptionEn }]),
+  );
+
+function dbProductToItem(p: DBProduct): Item {
+  const meta = STATIC_META[p.name] ?? {};
+  const sizeOpts = p.options.filter((o) => o.type === "size");
+  const base: Omit<Item, "price" | "prices"> = {
+    id: p.id,
+    name: p.name,
+    nameEn: meta.nameEn,
+    description: p.description,
+    descriptionEn: meta.descriptionEn,
+    category: p.category as Category,
+    imageUrl: p.image_url || LOCAL_IMAGES[p.name] || null,
+    sortOrder: p.display_order,
+  };
+  if (sizeOpts.length > 0) {
+    return {
+      ...base,
+      prices: sizeOpts.map((o) => ({
+        id: o.id,
+        label: o.name,
+        value: `${o.price.toFixed(2).replace(".", ",")} €`,
+      })),
+    };
+  }
+  return { ...base, price: `${p.price.toFixed(2).replace(".", ",")} €` };
+}
+
 const categoryRank = new Map<Category, number>(
   CATEGORY_ORDER.map((category, index) => [category, index]),
 );
@@ -806,11 +853,36 @@ function getFilteredItems(category: Category) {
 }
 
 export function Menu() {
-  const [active, setActive] = useState<Category>(filterCategories[0]);
+  const [active, setActive] = useState<string>(filterCategories[0]);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
+  const [liveItems, setLiveItems] = useState<Item[]>(sortedMenuItems);
   const { t, lang } = useI18n();
   const navigate = useNavigate();
-  const filtered = getFilteredItems(active);
+
+  useEffect(() => {
+    supabase
+      .from("products")
+      .select("id,name,description,price,image_url,category,is_new,is_best_seller,display_order,options")
+      .eq("is_available", true)
+      .order("display_order")
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const converted = (data as DBProduct[]).map(dbProductToItem);
+          converted.sort((a, b) => {
+            const rA = categoryRank.get(a.category as Category) ?? 99;
+            const rB = categoryRank.get(b.category as Category) ?? 99;
+            return rA !== rB ? rA - rB : a.sortOrder - b.sortOrder;
+          });
+          setLiveItems(converted);
+        }
+      });
+  }, []);
+
+  const liveFilterCategories: string[] = CATEGORY_ORDER.filter((cat) =>
+    liveItems.some((item) => item.category === cat),
+  );
+
+  const filtered = liveItems.filter((item) => item.category === active);
 
   const totalCents = savedItems.reduce((total, item) => total + item.priceCents * item.quantity, 0);
 
@@ -883,8 +955,10 @@ export function Menu() {
         </div>
 
         <div className="mx-auto mb-12 flex max-w-5xl flex-wrap justify-center gap-2 md:gap-3">
-          {filterCategories.map((category) => {
-            const categoryLabel = t(CATEGORY_LABEL_KEY[category]);
+          {liveFilterCategories.map((category) => {
+            const labelKey = CATEGORY_LABEL_KEY[category as Category];
+            const categoryLabel = labelKey ? t(labelKey) : category;
+            const emoji = CATEGORY_EMOJI[category as Category] ?? "🍽️";
 
             return (
               <button
@@ -899,7 +973,7 @@ export function Menu() {
                     : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
                 }`}
               >
-                <span aria-hidden="true">{CATEGORY_EMOJI[category]}</span>
+                <span aria-hidden="true">{emoji}</span>
                 <span>{categoryLabel}</span>
               </button>
             );
