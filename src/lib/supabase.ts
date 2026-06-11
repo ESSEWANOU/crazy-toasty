@@ -41,6 +41,7 @@ export type Order = {
   created_at: string;
   customer_name: string;
   customer_phone: string;
+  customer_email: string | null;
   notes: string | null;
   status: OrderStatus;
   total_cents: number;

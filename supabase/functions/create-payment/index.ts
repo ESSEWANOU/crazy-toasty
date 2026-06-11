@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { items, customer_name, customer_phone, notes, total_cents, site_url } =
+    const { items, customer_name, customer_phone, customer_email, notes, total_cents, site_url } =
       await req.json();
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
       .insert({
         customer_name,
         customer_phone,
+        customer_email: customer_email ?? null,
         notes: notes ?? null,
         status: "draft",
         total_cents,
@@ -61,7 +62,8 @@ Deno.serve(async (req) => {
       mode: "payment",
       success_url: `${site_url}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${site_url}/commander`,
-      metadata: { order_id: order.id },
+      customer_email: customer_email ?? undefined,
+      metadata: { order_id: order.id, customer_email: customer_email ?? "" },
     });
 
     // Store session ID on the order

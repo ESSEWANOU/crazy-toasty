@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { order_id, customer_name, customer_phone, notes, total_cents, items, payment_type } =
+    const { order_id, customer_name, customer_phone, customer_email, notes, total_cents, items, payment_type } =
       await req.json();
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
@@ -36,7 +36,8 @@ Deno.serve(async (req) => {
       )
       .join("");
 
-    const html = `
+    // ── Restaurant notification ──────────────────────────────────────
+    const restaurantHtml = `
       <div style="font-family:sans-serif;max-width:560px;margin:auto;background:#0f172a;color:#f1f5f9;border-radius:16px;overflow:hidden">
         <div style="background:#1e3a8a;padding:24px;text-align:center">
           <h1 style="margin:0;font-size:24px;letter-spacing:2px">CRAZY TOASTY</h1>
@@ -62,21 +63,60 @@ Deno.serve(async (req) => {
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: `Crazy Toasty <${fromEmail}>`,
         to: [restaurantEmail],
         subject: `🍗 Commande REF ${shortRef} — ${totalEur} € (${paymentLabel})`,
-        html,
+        html: restaurantHtml,
       }),
     });
 
     if (!res.ok) {
       const body = await res.text();
       throw new Error(`Resend error: ${body}`);
+    }
+
+    // ── Customer confirmation (if email provided) ────────────────────
+    if (customer_email) {
+      const customerHtml = `
+        <div style="font-family:sans-serif;max-width:560px;margin:auto;background:#0f172a;color:#f1f5f9;border-radius:16px;overflow:hidden">
+          <div style="background:#1e3a8a;padding:24px;text-align:center">
+            <h1 style="margin:0;font-size:24px;letter-spacing:2px">CRAZY TOASTY</h1>
+            <p style="margin:4px 0 0;color:#f97316;font-size:13px;letter-spacing:4px">TOULOUS'HEIN !</p>
+          </div>
+          <div style="padding:24px">
+            <h2 style="margin-top:0;color:#34d399">Ta commande est confirmée !</h2>
+            <p>Bonjour ${customer_name}, nous avons bien reçu ta commande.</p>
+            <p><strong>Référence :</strong> #${shortRef}</p>
+            <p><strong>Paiement :</strong> ${paymentLabel}</p>
+            ${notes ? `<p><strong>Tes remarques :</strong> ${notes}</p>` : ""}
+            <table style="width:100%;border-collapse:collapse;margin-top:16px">
+              ${itemsHtml}
+              <tr style="border-top:1px solid #334155">
+                <td style="padding:10px 12px;font-weight:bold">Total</td>
+                <td style="padding:10px 12px;text-align:right;font-weight:bold;color:#34d399">${totalEur} €</td>
+              </tr>
+            </table>
+            <div style="margin-top:24px;padding:16px;background:#1e293b;border-radius:12px">
+              <p style="margin:0;font-size:14px"><strong>📍 Adresse de retrait</strong></p>
+              <p style="margin:4px 0 0;font-size:13px;color:#94a3b8">2 rue Paul Mériel, 31000 Toulouse</p>
+            </div>
+            <p style="margin-top:20px;font-size:12px;color:#94a3b8">À tout à l'heure chez Crazy Toasty !</p>
+          </div>
+        </div>
+      `;
+
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: `Crazy Toasty <${fromEmail}>`,
+          to: [customer_email],
+          subject: `✅ Commande confirmée #${shortRef} — Crazy Toasty`,
+          html: customerHtml,
+        }),
+      });
     }
 
     return new Response(
