@@ -19,7 +19,7 @@ import {
   Building2, Bike, Gamepad2,
   Bell, Search, Timer, Phone, Check, Trash2, AlertTriangle, Volume2,
   Pencil, Briefcase, Loader2, ArrowRight, Send,
-  Play, Square, UserCircle, TrendingUp,
+  Play, Square, UserCircle, TrendingUp, Calendar,
   Plus, Flame, Star, Image as ImageIcon,
   Save, MapPin,
 } from "lucide-react";
@@ -33,6 +33,10 @@ import { useAuth } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import PromotionsManagement from "@/components/admin/PromotionsManagement";
+import PointageHistory from "@/components/admin/hr/PointageHistory";
 
 export const Route = createFileRoute("/staff/")({
   component: StaffDashboardPage,
@@ -368,10 +372,10 @@ function StaffPageInner() {
     { value: "sales",            label: "Ventes",             icon: Euro,             category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "products",         label: "Produits & Tarifs",  icon: ShoppingBag,      category: "gestion", adminOnly: true },
     { value: "options",          label: "Options produits",   icon: SlidersHorizontal,category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
-    { value: "promotions",       label: "Promos",             icon: Percent,          category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
+    { value: "promotions",       label: "Promos",             icon: Percent,          category: "gestion", adminOnly: true },
     { value: "invoices",         label: "Factures",           icon: FileText,         category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "planning",         label: "Planning",           icon: CalendarDays,     category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
-    { value: "pointage-history", label: "Historique pointage",icon: Clock,            category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
+    { value: "pointage-history", label: "Historique pointage",icon: Clock,            category: "gestion", adminOnly: true },
     { value: "inventory",        label: "Inventaire",         icon: Package,          category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "users",            label: "Équipe",             icon: Users,            category: "gestion", adminOnly: true },
     { value: "delivery",         label: "Livraisons",         icon: Bike,             category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
@@ -534,6 +538,8 @@ function StaffPageInner() {
       case "timetracking":  return <TimetrackingView onGoToTeam={() => setActiveTab("users")} />;
       case "users":         return isAdminUnlocked ? <TeamView /> : null;
       case "products":      return isAdminUnlocked ? <ProductsView /> : null;
+      case "promotions":    return isAdminUnlocked ? <PromotionsManagement /> : null;
+      case "pointage-history": return isAdminUnlocked ? <PointageHistory /> : null;
       case "theme":         return <ThemePage currentTheme={currentTheme} setCurrentTheme={setCurrentTheme} />;
       case "game":          return <GamePage />;
       default:              return null;
@@ -2814,6 +2820,119 @@ function TimetrackingView({ onGoToTeam: _ }: { onGoToTeam?: () => void }) {
               );
             })}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Time History View (Historique pointage) ─────────────────────────────────
+function TimeHistoryView() {
+  const [entries, setEntries] = useState<(TabletEntry & { total_hours?: number | null })[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dateFilter, setDateFilter] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const [{ data: entriesData }, { data: staffData }] = await Promise.all([
+      supabase
+        .from("staff_time_entries")
+        .select("*")
+        .gte("clock_in", `${dateFilter}T00:00:00`)
+        .lte("clock_in", `${dateFilter}T23:59:59`)
+        .order("clock_in", { ascending: false }),
+      supabase.from("staff_members").select("*").eq("is_active", true).order("last_name"),
+    ]);
+    setEntries((entriesData || []) as (TabletEntry & { total_hours?: number | null })[]);
+    setStaff((staffData || []) as StaffMember[]);
+    setLoading(false);
+  }, [dateFilter]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("pointage-history-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "staff_time_entries" }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [fetchData]);
+
+  const getEmployeeName = (id: string) => {
+    const emp = staff.find(e => e.id === id);
+    return emp ? `${emp.first_name} ${emp.last_name}` : "Inconnu";
+  };
+
+  const completedEntries = entries.filter(e => e.clock_out);
+  const activeEntries = entries.filter(e => !e.clock_out);
+
+  const fmtH = (h: number) => {
+    const hh = Math.floor(h);
+    const mm = Math.round((h - hh) * 60);
+    return `${hh}h${String(Math.max(0, mm)).padStart(2, "0")}`;
+  };
+
+  const getDuration = (entry: TabletEntry & { total_hours?: number | null }) => {
+    if (entry.total_hours != null) return entry.total_hours;
+    if (entry.clock_out) {
+      return differenceInMinutes(parseISO(entry.clock_out), parseISO(entry.clock_in)) / 60;
+    }
+    return differenceInMinutes(new Date(), parseISO(entry.clock_in)) / 60;
+  };
+
+  return (
+    <div className="p-4 md:p-6 space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <Calendar className="w-5 h-5 text-muted-foreground" />
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+        />
+        <h3 className="font-semibold text-lg">
+          {format(parseISO(dateFilter), "EEEE d MMMM yyyy", { locale: fr })}
+        </h3>
+        {completedEntries.length > 0 && (
+          <Badge variant="secondary" className="text-xs">
+            {completedEntries.length} pointage{completedEntries.length > 1 ? "s" : ""}
+          </Badge>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+      ) : entries.length === 0 ? (
+        <Card className="p-6 text-center text-sm text-muted-foreground">
+          Aucun pointage pour cette date
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {entries.map(entry => {
+            const duration = getDuration(entry);
+            return (
+              <Card key={entry.id} className="p-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <UserCircle className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-sm">{getEmployeeName(entry.employee_id)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(entry.clock_in), "HH:mm")}
+                        {entry.clock_out ? ` → ${format(new Date(entry.clock_out), "HH:mm")}` : " → en cours"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={entry.clock_out ? "secondary" : "default"}>
+                      {fmtH(duration)}{!entry.clock_out && " (en cours)"}
+                    </Badge>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
