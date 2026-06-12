@@ -954,7 +954,7 @@ export function Menu() {
           </h2>
         </div>
 
-        <div className="mx-auto mb-12 flex max-w-5xl flex-wrap justify-center gap-2 md:gap-3">
+        <div className="mb-12 flex max-w-full gap-2 overflow-x-auto scrollbar-hide px-4 md:mx-auto md:max-w-5xl md:flex-wrap md:justify-center md:gap-3 md:overflow-visible md:px-0">
           {liveFilterCategories.map((category) => {
             const labelKey = CATEGORY_LABEL_KEY[category as Category];
             const categoryLabel = labelKey ? t(labelKey) : category;
@@ -967,7 +967,7 @@ export function Menu() {
                 onClick={() => setActive(category)}
                 aria-pressed={active === category}
                 aria-label={categoryLabel}
-                className={`inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-normal break-words transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
+                className={`inline-flex min-h-10 flex-shrink-0 items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-center font-sans text-xs font-semibold leading-tight tracking-normal whitespace-nowrap transition-all sm:px-5 sm:text-sm md:px-6 md:py-3 md:text-base ${
                   active === category
                     ? "bg-primary text-primary-foreground shadow-glow"
                     : "border border-border/70 bg-card/90 text-foreground/85 hover:border-primary/35 hover:bg-card"
