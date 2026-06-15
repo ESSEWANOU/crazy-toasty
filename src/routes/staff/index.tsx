@@ -37,6 +37,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PromotionsManagement from "@/components/admin/PromotionsManagement";
 import PointageHistory from "@/components/admin/hr/PointageHistory";
+import NotificationsHub from "@/components/admin/NotificationsHub";
 
 export const Route = createFileRoute("/staff/")({
   component: StaffDashboardPage,
@@ -376,6 +377,7 @@ function StaffPageInner() {
     { value: "invoices",         label: "Factures",           icon: FileText,         category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "planning",         label: "Planning",           icon: CalendarDays,     category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "pointage-history", label: "Historique pointage",icon: Clock,            category: "gestion", adminOnly: true },
+    { value: "notifications",    label: "Notifications",      icon: Bell,             category: "gestion", adminOnly: true },
     { value: "inventory",        label: "Inventaire",         icon: Package,          category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "users",            label: "Équipe",             icon: Users,            category: "gestion", adminOnly: true },
     { value: "delivery",         label: "Livraisons",         icon: Bike,             category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
@@ -540,6 +542,7 @@ function StaffPageInner() {
       case "products":      return isAdminUnlocked ? <ProductsView /> : null;
       case "promotions":    return isAdminUnlocked ? <PromotionsManagement /> : null;
       case "pointage-history": return isAdminUnlocked ? <PointageHistory /> : null;
+      case "notifications":     return isAdminUnlocked ? <NotificationsHub /> : null;
       case "theme":         return <ThemePage currentTheme={currentTheme} setCurrentTheme={setCurrentTheme} />;
       case "game":          return <GamePage />;
       default:              return null;
