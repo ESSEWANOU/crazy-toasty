@@ -504,7 +504,7 @@ const MENU_ITEMS: Item[] = [
     descriptionEn: "Creamy ranch sauce with fresh herbs, mild and refreshing.",
     price: "1,00 €",
     category: "Sauces",
-    imageUrl: ranchImg,
+    imageUrl: mayonnaiseImg,
     sortOrder: 54,
   },
   {
@@ -559,7 +559,7 @@ const MENU_ITEMS: Item[] = [
     descriptionEn: "Smooth mayo.",
     price: "1,00 €",
     category: "Sauces",
-    imageUrl: mayonnaiseImg,
+    imageUrl: ranchImg,
     sortOrder: 59,
   },
 
