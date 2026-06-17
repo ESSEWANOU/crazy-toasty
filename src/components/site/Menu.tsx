@@ -908,7 +908,9 @@ export function Menu() {
           </h2>
         </div>
 
-        <div className="mb-12 flex max-w-full gap-2 overflow-x-auto scrollbar-hide px-4 md:mx-auto md:max-w-5xl md:flex-wrap md:justify-center md:gap-3 md:overflow-visible md:px-0">
+        <div className="relative mb-12 md:mb-12">
+          <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none md:hidden" />
+          <div className="flex max-w-full gap-2 overflow-x-auto scrollbar-hide px-4 md:mx-auto md:max-w-5xl md:flex-wrap md:justify-center md:gap-3 md:overflow-visible md:px-0">
           {liveFilterCategories.map((category) => {
             const labelKey = CATEGORY_LABEL_KEY[category as Category];
             const categoryLabel = labelKey ? t(labelKey) : category;
@@ -932,6 +934,7 @@ export function Menu() {
               </button>
             );
           })}
+          </div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-10">
