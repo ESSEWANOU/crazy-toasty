@@ -37,6 +37,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PromotionsManagement from "@/components/admin/PromotionsManagement";
 import PointageHistory from "@/components/admin/hr/PointageHistory";
+import PlanningsPage from "@/components/admin/hr-combo/PlanningsPage";
 import NotificationsHub from "@/components/admin/NotificationsHub";
 
 export const Route = createFileRoute("/staff/")({
@@ -310,6 +311,14 @@ function StaffPageInner() {
   }, []);
 
   useEffect(() => { localStorage.setItem("ct-staff-theme", currentTheme); }, [currentTheme]);
+  // Apply theme vars to :root so portals (modals) inherit them
+  useEffect(() => {
+    const vars = resolved === "dark" ? DARK_VARS : LIGHT_VARS;
+    const root = document.documentElement;
+    Object.entries(vars).forEach(([key, value]) => {
+      if (key.startsWith("--")) root.style.setProperty(key, value as string);
+    });
+  }, [resolved]);
 
   // Layout
   const [activeTab, setActiveTab] = useState<TabValue>("kitchen");
@@ -375,7 +384,7 @@ function StaffPageInner() {
     { value: "options",          label: "Options produits",   icon: SlidersHorizontal,category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
     { value: "promotions",       label: "Promos",             icon: Percent,          category: "gestion", adminOnly: true },
     { value: "invoices",         label: "Factures",           icon: FileText,         category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
-    { value: "planning",         label: "Planning",           icon: CalendarDays,     category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
+    { value: "planning",         label: "Planning",           icon: CalendarDays,     category: "gestion", adminOnly: true },
     { value: "pointage-history", label: "Historique pointage",icon: Clock,            category: "gestion", adminOnly: true },
     { value: "notifications",    label: "Notifications",      icon: Bell,             category: "gestion", adminOnly: true },
     { value: "inventory",        label: "Inventaire",         icon: Package,          category: "gestion", adminOnly: true, disabled: true, disabledLabel: "Bientôt" },
@@ -543,6 +552,7 @@ function StaffPageInner() {
       case "promotions":    return isAdminUnlocked ? <PromotionsManagement /> : null;
       case "pointage-history": return isAdminUnlocked ? <PointageHistory /> : null;
       case "notifications":     return isAdminUnlocked ? <NotificationsHub /> : null;
+      case "planning":          return isAdminUnlocked ? <PlanningsPage selectedRestaurant="crazy-toasty" /> : null;
       case "theme":         return <ThemePage currentTheme={currentTheme} setCurrentTheme={setCurrentTheme} />;
       case "game":          return <GamePage />;
       default:              return null;
