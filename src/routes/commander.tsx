@@ -24,8 +24,8 @@ function generateTimeSlots(): string[] {
   const buffer = 15 * 60 * 1000;
 
   const ranges: [number, number, number, number][] = [
-    [11, 30, 14, 30],
-    [18, 0,  22, 0 ],
+    [11, 30, 14, 45],
+    [18, 0,  22, 15],
   ];
 
   for (const [sh, sm, eh, em] of ranges) {
